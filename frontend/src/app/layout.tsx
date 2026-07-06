@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/layout/navbar";
+import { NotificationCountProvider } from "@/hooks/use-notification-count";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +36,8 @@ export default function RootLayout({
       <body 
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex min-h-screen flex-col bg-background text-foreground">
+        <NotificationCountProvider>
+          <div className="flex min-h-screen flex-col bg-background text-foreground">
           <Navbar />
           <main className="flex flex-1 flex-col">
             <div className="mx-auto flex w-full flex-1 flex-col px-4 py-8 md:py-10">
@@ -43,6 +45,7 @@ export default function RootLayout({
             </div>
           </main>
         </div>
+        </NotificationCountProvider>
       </body>
      </html>
     </ClerkProvider>

@@ -1,0 +1,145 @@
+[
+  {
+    "category": "Q&A",
+    "title": "Struggling with useEffect dependency array in React",
+    "body": "I'm constantly running into issues with `useEffect`'s dependency array. Sometimes I get infinite loops, other times the effect uses stale data. What are the best practices for managing dependencies, especially when dealing with functions or objects?",
+    "replies": [
+      {
+        "body": "The golden rule is: include everything from the component scope that your effect uses. If it's a function that doesn't change often, wrap it in `useCallback`."
+      },
+      {
+        "body": "Make sure your ESLint configuration includes the `exhaustive-deps` rule. It's an absolute lifesaver for catching missing dependencies."
+      },
+      {
+        "body": "Infinite loops often happen when you update state inside the effect, and that state variable is also a dependency. Be mindful of how you update state or consider using the functional update form."
+      },
+      {
+        "body": "For objects or arrays, remember that reference equality matters. If you create a new object/array literal on every render, it will trigger the effect. Consider `useMemo` for stable object references."
+      },
+      {
+        "body": "If you absolutely don't want an effect to re-run, use an empty array `[]`, but be aware this means it will only run once and will close over initial props/state."
+      },
+      {
+        "body": "Sometimes, the 'stale data' issue comes from not providing a cleanup function. Ensure you return a function from `useEffect` to clean up subscriptions or timers."
+      },
+      {
+        "body": "A common pattern for functions is to move them inside the effect if they don't need to be called from render logic. This makes them part of the effect's closure and avoids dependency issues."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Context API for global state or stick with Redux?",
+    "body": "I'm starting a new medium-sized React application and I'm torn between using the Context API (potentially with `useReducer`) for global state or going with Redux. Context seems simpler to set up, but Redux has powerful dev tools and patterns. When should I choose one over the other?",
+    "replies": [
+      {
+        "body": "For simpler cases like theme switching, authentication status, or user preferences, Context API is often sufficient and avoids boilerplate."
+      },
+      {
+        "body": "Redux (especially with Redux Toolkit) shines for complex applications requiring a centralized, predictable state, robust debugging, middleware (for async logic like thunks/sagas), and a clear separation of concerns."
+      },
+      {
+        "body": "Context + `useReducer` can scale surprisingly well, but you'll have to build out many of the features Redux provides out-of-the-box, like memoized selectors or a structured way to handle side effects."
+      },
+      {
+        "body": "Performance can be a factor. Context can cause widespread re-renders if your context value changes frequently and many components consume it. Redux's connect/useSelector allows for more granular re-renders."
+      },
+      {
+        "body": "Consider team familiarity. If your team is already proficient with Redux, sticking with it might be more productive. If not, Context has a gentler learning curve initially."
+      },
+      {
+        "body": "Redux Toolkit largely solves the 'boilerplate' complaint. `createSlice` makes defining reducers and actions incredibly streamlined."
+      },
+      {
+        "body": "My rule of thumb: If state changes don't need a strict history or complex async orchestration, Context is good. If you foresee complex interactions, multiple data sources, and a large team, Redux is generally safer."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Best approach to migrate existing Redux setup to Redux Toolkit?",
+    "body": "Our project uses an older, 'classic' Redux setup with separate action types, action creators, and reducers. We want to migrate to Redux Toolkit to leverage its benefits. What's the most efficient and least disruptive way to transition our existing code?",
+    "replies": [
+      {
+        "body": "Start by setting up `configureStore` to replace your `createStore` boilerplate. This is a quick win and immediately gives you a better configured store."
+      },
+      {
+        "body": "Migrate one slice at a time. Identify a logical piece of state and convert its actions, action creators, and reducer into a single `createSlice` call. This allows for incremental adoption."
+      },
+      {
+        "body": "Keep your existing `combineReducers` structure initially. As you convert reducers to slices, you can replace the old reducer function with `slice.reducer`."
+      },
+      {
+        "body": "Don't forget to refactor your action dispatches. Instead of `dispatch(someActionCreator(payload))`, you'll use `dispatch(someSlice.actions.actionName(payload))`."
+      },
+      {
+        "body": "For async logic, `createAsyncThunk` is your best friend. It simplifies handling pending, fulfilled, and rejected states for API calls significantly."
+      },
+      {
+        "body": "Embrace Immer! RTK uses Immer internally, allowing you to write 'mutating' logic in reducers, which then gets translated into immutable updates. This makes reducers much more readable."
+      },
+      {
+        "body": "Consider using `createEntityAdapter` for managing normalized state, especially if you have collections of items. It reduces a lot of boilerplate for CRUD operations."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "How do you structure and share logic with custom React Hooks?",
+    "body": "I'm looking for ways to reuse logic across different components and have heard a lot about custom React Hooks. Can anyone share best practices, examples, or common patterns for structuring and effectively sharing logic with custom hooks? When should I create one?",
+    "replies": [
+      {
+        "body": "A custom hook is essentially a function that uses other React Hooks (`useState`, `useEffect`, etc.) and encapsulates reusable stateful logic. Name them starting with `use`."
+      },
+      {
+        "body": "Create a custom hook when you find yourself copying and pasting the same `useState`/`useEffect` logic between multiple components. It's a great way to adhere to the DRY principle."
+      },
+      {
+        "body": "A common pattern is a hook for managing form input state, e.g., `useFormInput(initialValue)` which returns `value` and `onChange` props."
+      },
+      {
+        "body": "Another great use case is for integrating with external APIs or browser APIs, like `useLocalStorage`, `usePrevious`, or `useWindowSize`."
+      },
+      {
+        "body": "Keep your custom hooks focused on a single responsibility. If it starts doing too much, consider breaking it down into smaller, more specialized hooks."
+      },
+      {
+        "body": "Ensure your custom hooks are testable. You can use `@testing-library/react-hooks` or similar tools to test their internal logic without needing to render a full component."
+      },
+      {
+        "body": "Pass configuration or dependencies as arguments to your custom hook, and return state, setters, or event handlers. This makes them highly flexible."
+      },
+      {
+        "body": "Example: `useToggle` for boolean state: `const [isOn, toggle] = useToggle(false);` Simple but very useful."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Optimizing React Context re-renders for large state trees",
+    "body": "I've implemented global state using React Context API, but I'm noticing significant re-renders across many components even when only a small part of the context value changes. How can I optimize Context API usage to prevent unnecessary re-renders when dealing with a large, frequently updated state tree?",
+    "replies": [
+      {
+        "body": "The most common advice is to split your context into smaller, more granular contexts. If you have distinct pieces of state, put them in separate contexts."
+      },
+      {
+        "body": "Use `useMemo` for your context provider's `value` prop. If the object or array you're providing as `value` is created anew on every render, all consumers will re-render. Memoize it!"
+      },
+      {
+        "body": "Combine Context with `useReducer`. This allows you to dispatch actions to update state, and the reducer logic can ensure that new state objects are only created when truly necessary."
+      },
+      {
+        "body": "For individual components consuming context, consider wrapping them in `React.memo` if their props don't change. However, if they consume context directly, they'll still re-render when context changes."
+      },
+      {
+        "body": "If you need to select only a part of the context, you might need a custom hook or an abstraction layer that allows consumers to 'subscribe' to specific parts of the context value, similar to how Redux selectors work."
+      },
+      {
+        "body": "Avoid putting rapidly changing data alongside static data in the same context. Separate concerns."
+      },
+      {
+        "body": "Sometimes, the problem isn't Context itself, but how your state is structured. Ensure your state updates are immutable. If you mutate state directly, React won't detect a change and `useMemo` won't help."
+      }
+    ]
+  }
+]

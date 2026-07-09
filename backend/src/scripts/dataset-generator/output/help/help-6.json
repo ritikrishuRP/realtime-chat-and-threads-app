@@ -1,0 +1,160 @@
+[
+  {
+    "category": "Help",
+    "title": "Clerk authentication issue with Next.js middleware",
+    "body": "I'm having trouble configuring Clerk with Next.js middleware. I want to protect all routes except `/` and `/sign-in`. My middleware isn't redirecting unauthenticated users properly and I keep getting redirected to the sign-in page even when logged in.",
+    "replies": [
+      {
+        "body": "Make sure your `publicRoutes` array in `middleware.ts` is correctly configured. Clerk's middleware will protect everything not explicitly listed there."
+      },
+      {
+        "body": "Are you using `clerkMiddleware` or `authMiddleware`? `clerkMiddleware` is the newer approach. Also, check your Clerk environment variables are set correctly."
+      },
+      {
+        "body": "Sometimes a caching issue can cause this. Try clearing your browser cache or testing in incognito mode. Also, ensure your `NEXT_PUBLIC_CLERK_SIGN_IN_URL` is set."
+      },
+      {
+        "body": "Double-check the order of your middleware. If you have other middleware, it might be interfering. Clerk's middleware should typically run early."
+      },
+      {
+        "body": "Could it be a version mismatch? Ensure your `@clerk/nextjs` package is up to date and compatible with your Next.js version. Breaking changes sometimes occur."
+      },
+      {
+        "body": "I had a similar problem. My `publicRoutes` array was incorrect. I needed to specify `/` and `/sign-in(.*)` to catch all sub-routes of sign-in too."
+      },
+      {
+        "body": "Check your `CLERK_SECRET_KEY` is present in your `.env.local` file. Without it, Clerk cannot properly authenticate server-side."
+      },
+      {
+        "body": "Are you calling `startAuth()` or `protect()` within your middleware? `clerkMiddleware` handles this automatically, but if you're customising, that could be a point of failure."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Verifying Stripe webhooks in a Node.js Express app",
+    "body": "I'm setting up a Stripe webhook endpoint in my Node.js Express app to handle subscription events. How do I properly verify the webhook signature to ensure security? I'm worried about malicious requests.",
+    "replies": [
+      {
+        "body": "You need to use `stripe.webhooks.constructEvent`. It takes the raw request body, the `stripe-signature` header, and your webhook secret."
+      },
+      {
+        "body": "Crucially, ensure your Express app parses the raw request body BEFORE any other body parsers. `express.json()` will consume it, so use a specific middleware just for webhooks: `app.use('/webhook', express.raw({type: 'application/json'}))`."
+      },
+      {
+        "body": "Don't forget to store your `STRIPE_WEBHOOK_SECRET` securely in environment variables. Never hardcode it."
+      },
+      {
+        "body": "Also, consider using a `try...catch` block around `constructEvent` because it will throw an error if the signature is invalid or the event is stale."
+      },
+      {
+        "body": "What helped me was testing locally with the Stripe CLI. It allows you to forward events to your `localhost` endpoint and handles the signature generation."
+      },
+      {
+        "body": "Make sure the `webhookSecret` you're passing to `constructEvent` matches the one shown in your Stripe dashboard for that specific endpoint."
+      },
+      {
+        "body": "If you're using a cloud function or serverless environment, sometimes the raw body parsing needs a specific configuration for that platform."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Extending Clerk's user model with custom fields",
+    "body": "I need to add custom fields like 'companyName' and 'role' to Clerk user profiles. What's the best way to do this with Clerk's API and Next.js? Should I use metadata or create a separate database table?",
+    "replies": [
+      {
+        "body": "Clerk provides `publicMetadata`, `privateMetadata`, and `unsafeMetadata` for this. `publicMetadata` is best for fields like 'companyName' that clients might need to access."
+      },
+      {
+        "body": "For 'role', if it's sensitive and only your backend should know, `privateMetadata` is suitable. You can update these via Clerk's Backend API."
+      },
+      {
+        "body": "You can also use webhooks! When a new user signs up (user.created event), trigger a webhook to your backend, then call Clerk's API to update their metadata."
+      },
+      {
+        "body": "On the frontend, you can access `publicMetadata` from `useUser()` hook or `currentUser` object. For server-side, `auth()` and `currentUser()` provide access."
+      },
+      {
+        "body": "If you have complex relationships or very large custom data, a separate database table linked by Clerk's user ID might be better. But for simple fields, metadata is cleaner."
+      },
+      {
+        "body": "Remember that `unsafeMetadata` is for specific client-side updates where you don't mind users potentially manipulating it. Not recommended for 'role' or critical data."
+      },
+      {
+        "body": "When updating metadata, make sure you're using the correct `Clerk` instance (backend SDK vs client-side `user.update()`). Be mindful of permissions."
+      },
+      {
+        "body": "I'd suggest starting with metadata. It keeps your user data centralized. Only move to a separate table if you hit specific scale or relational complexity issues."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Handling JWT expiry and refresh tokens in a SPA",
+    "body": "I'm building a Single Page Application (SPA) with a custom backend authentication using JWTs. What's the recommended approach for managing JWT expiry and securely refreshing tokens without constant re-logging? I want a smooth user experience.",
+    "replies": [
+      {
+        "body": "The standard approach involves using both a short-lived access token and a long-lived refresh token. Access tokens are sent with every API request."
+      },
+      {
+        "body": "When the access token expires, your frontend should catch the 401 Unauthorized response, then send a request to a dedicated `/refresh-token` endpoint with the refresh token."
+      },
+      {
+        "body": "The refresh token should ideally be stored in an `HttpOnly` cookie. This makes it inaccessible to client-side JavaScript, mitigating XSS risks."
+      },
+      {
+        "body": "Upon successful refresh, the backend issues a new access token (and optionally a new refresh token for rotation). The frontend then retries the failed API request."
+      },
+      {
+        "body": "Implement refresh token rotation: each time a refresh token is used, invalidate it and issue a new one. This limits the damage if a refresh token is compromised."
+      },
+      {
+        "body": "Consider a blacklist or revoke mechanism for refresh tokens on the backend, especially when a user logs out or changes their password."
+      },
+      {
+        "body": "What about automatically refreshing before expiry? You can set up an interceptor that checks token expiry time and proactively calls the refresh endpoint a few minutes before it expires."
+      },
+      {
+        "body": "Be careful with refresh token expiry. If both access and refresh tokens expire, the user must re-authenticate. Balance security with user convenience."
+      },
+      {
+        "body": "Don't store JWTs in `localStorage`. While convenient, it's vulnerable to XSS. `sessionStorage` or in-memory (if tokens are short-lived and refresh is frequent) are better if you can't use `HttpOnly` cookies."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Ensuring reliable webhook event delivery and handling idempotency",
+    "body": "My service relies heavily on webhooks from various third-party APIs. How can I ensure reliable event delivery (retries, queues) and handle duplicate events gracefully using idempotency keys? I'm worried about missed events or processing the same event multiple times.",
+    "replies": [
+      {
+        "body": "For reliable delivery, a message queue is almost essential. Ingest all incoming webhooks into a queue (e.g., AWS SQS, RabbitMQ, Kafka) and process them asynchronously."
+      },
+      {
+        "body": "This decouples your webhook receiver from the processing logic, allowing you to handle spikes and retry failures without blocking the incoming webhook."
+      },
+      {
+        "body": "For idempotency, most webhook providers include an `id` or `eventId` in the payload or headers. Store this ID in your database and check if you've already processed it before proceeding."
+      },
+      {
+        "body": "When processing, wrap the operation in a transaction and check for the `eventId`. If it exists, skip. If not, process and then save the `eventId`."
+      },
+      {
+        "body": "Be aware of 'at-least-once' delivery guarantees common with webhooks and queues. This means you *will* receive duplicates, so idempotency is crucial."
+      },
+      {
+        "body": "What about retries? Your queue system (e.g., SQS dead-letter queues) can handle this. If processing fails, the message can be put back in the queue or moved to a DLQ for manual inspection."
+      },
+      {
+        "body": "You can also implement your own retry logic with exponential backoff for transient errors, but let the queue handle long-term delivery attempts."
+      },
+      {
+        "body": "Logging is key! Log every incoming webhook, its `eventId`, and the outcome of processing. This helps debug missed or duplicate events."
+      },
+      {
+        "body": "Consider using a distributed lock (e.g., Redis locks) if your processing involves multiple instances and you need to ensure only one instance processes a unique event."
+      }
+    ]
+  }
+]

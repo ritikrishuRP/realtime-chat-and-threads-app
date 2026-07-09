@@ -1,0 +1,145 @@
+[
+  {
+    "category": "Help",
+    "title": "Which EC2 instance type for a medium-traffic NodeJS app?",
+    "body": "I'm deploying a NodeJS API and a React frontend. We expect around 500-1000 concurrent users at peak. Currently using a t3.medium but seeing high CPU utilization. Any recommendations for a more robust instance type without breaking the bank?",
+    "replies": [
+      {
+        "body": "A t3.medium might be bursting its CPU credits. Consider moving to an M-series instance like m5.large or m6i.large for more consistent performance. They're general-purpose and usually a good starting point."
+      },
+      {
+        "body": "Before upgrading, have you profiled your NodeJS application? Sometimes it's not the instance, but inefficiencies in the code causing high CPU. Tools like New Relic or even simple `top` can reveal bottlenecks."
+      },
+      {
+        "body": "If CPU is your primary bottleneck, compute-optimized instances like c5.large or c6i.large might be a better fit. Evaluate if you need more raw compute power or a balance of compute and memory."
+      },
+      {
+        "body": "Definitely look into Auto Scaling Groups. You can start with an m5.large and scale out to multiple instances during peak loads. This is often more cost-effective than running one very large instance all the time."
+      },
+      {
+        "body": "Don't forget a Load Balancer (ALB or NLB) in front of your EC2 instances. It's essential for distributing traffic and enabling future scaling, even if you only have one instance initially."
+      },
+      {
+        "body": "Have you considered Graviton (T4g/M6g/C6g) instances? They often offer better price/performance for many workloads, including NodeJS, if your application is compatible with ARM architecture."
+      },
+      {
+        "body": "Check your CloudWatch metrics more closely. Is the CPU utilization sustained, or just in spikes? If it's spiking, burstable instances might be fine, but if it's sustained, a dedicated CPU instance is needed."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Best CI/CD pipeline for serverless on AWS?",
+    "body": "We're moving our microservices to AWS Lambda and API Gateway. What's the recommended CI/CD setup? Currently using Jenkins but it feels a bit heavy for serverless. Looking for something more integrated with AWS services.",
+    "replies": [
+      {
+        "body": "AWS CodePipeline and CodeBuild are excellent for serverless. You can connect them to GitHub/CodeCommit, build your SAM/Serverless Framework template, and deploy directly to CloudFormation."
+      },
+      {
+        "body": "The Serverless Framework has built-in CI/CD capabilities and integrations. It can handle packaging, deployment, and even rollback logic very efficiently for Lambda-based applications."
+      },
+      {
+        "body": "For a fully AWS-native solution, CodeCommit -> CodeBuild (for testing/packaging) -> CodePipeline (for orchestrating stages, e.g., dev, staging, prod) -> CloudFormation (for deployment) is a solid pattern."
+      },
+      {
+        "body": "GitHub Actions are also a very popular choice. Many pre-built actions exist for deploying to AWS Lambda and S3. It's often simpler to configure than a full AWS Code* suite for smaller projects."
+      },
+      {
+        "body": "If you're using SAM (Serverless Application Model), the `sam deploy` command can be integrated into any CI/CD system. CodeBuild is a natural fit for running SAM commands."
+      },
+      {
+        "body": "Don't forget about automated testing within your pipeline. CodeBuild is great for running unit, integration, and even end-to-end tests before deployment. This is crucial for serverless reliability."
+      },
+      {
+        "body": "GitLab CI/CD is another strong contender if your team already uses GitLab. It has powerful YAML-based configurations and can easily connect to AWS for deployments."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Trouble with EC2 Security Group for external database connection",
+    "body": "I have an EC2 instance trying to connect to an external PostgreSQL database (not RDS, hosted elsewhere). I've opened port 5432 in the EC2 security group inbound rules for 0.0.0.0/0, but the connection still times out. What am I missing?",
+    "replies": [
+      {
+        "body": "You've opened the inbound port, but have you checked the *outbound* rules of your EC2 instance's security group? By default, all outbound traffic is allowed, but sometimes custom rules can restrict it."
+      },
+      {
+        "body": "Also, verify the Network ACLs (NACLs) associated with the subnet where your EC2 instance resides. NACLs are stateless, so you'd need both inbound and outbound rules for port 5432."
+      },
+      {
+        "body": "It's not just your EC2 security group. You also need to ensure the *external database's firewall* allows inbound connections from your EC2 instance's public IP address (or NAT Gateway IP if in a private subnet)."
+      },
+      {
+        "body": "Can you `telnet` to the database host and port from your EC2 instance? E.g., `telnet db.example.com 5432`. This helps isolate whether it's a network issue or an application-level problem."
+      },
+      {
+        "body": "If your EC2 is in a private subnet, its outbound traffic to the internet will route through a NAT Gateway or NAT Instance. Ensure that NAT device's security group and NACL also allow the necessary traffic."
+      },
+      {
+        "body": "Double-check your VPC route table. Is there a route to the internet (via Internet Gateway or NAT Gateway) for traffic destined outside your VPC? Without it, your EC2 can't reach external IPs."
+      },
+      {
+        "body": "Make sure you're using the correct public IP or DNS name for the external database. A simple typo can cause timeout errors, even with correct firewall rules."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "How to reduce EC2 costs for development environments?",
+    "body": "Our dev team spins up multiple EC2 instances daily, and costs are getting out of hand. We often forget to shut them down. Any strategies or tools to automate cost reduction, especially for non-production environments?",
+    "replies": [
+      {
+        "body": "The AWS Instance Scheduler is a lifesaver. It uses Lambda and DynamoDB to automatically start and stop EC2 instances based on a schedule. Perfect for dev environments that only need to run during business hours."
+      },
+      {
+        "body": "Enforce strict tagging policies for dev instances. Then, use AWS Cost Explorer with tag filters to identify and track spending. Also helps in finding untagged or forgotten resources."
+      },
+      {
+        "body": "Implement a Lambda function triggered by CloudWatch Events that automatically stops instances without a 'DoNotShutdown' tag after a certain idle period or outside of working hours. You can even send notifications."
+      },
+      {
+        "body": "Consider using Spot Instances for non-critical dev workloads. They are much cheaper, though they can be interrupted. Good for build servers or ephemeral test environments."
+      },
+      {
+        "body": "Set up AWS Budgets with alerts. This won't stop instances but will notify your team when spending approaches or exceeds a predefined threshold, prompting action."
+      },
+      {
+        "body": "Educate your team on responsible resource usage. Sometimes, simply making people aware of the cost impact can significantly improve habits. Provide dashboards with team-specific cost breakdowns."
+      },
+      {
+        "body": "For certain dev tasks, explore containerization with Fargate or ECS. These are often more cost-effective as you only pay for compute capacity used, rather than a constantly running EC2."
+      },
+      {
+        "body": "Use CloudFormation or Terraform to manage dev environments. This ensures environments are spun up consistently and can be easily torn down when no longer needed, reducing manual errors."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Configuring custom domain and HTTPS for S3 static website",
+    "body": "I've deployed my static React app to an S3 bucket and enabled static website hosting. Now I want to use my custom domain (example.com) and set up HTTPS. What are the steps involving Route 53 and CloudFront?",
+    "replies": [
+      {
+        "body": "First, you need to set up a CloudFront distribution. Point its origin to your S3 static website endpoint (not the bucket itself, or you'll lose custom error pages/redirects)."
+      },
+      {
+        "body": "Request an SSL/TLS certificate for your custom domain (e.g., example.com and www.example.com) using AWS Certificate Manager (ACM). Make sure to request it in the `us-east-1` region, as CloudFront requires this."
+      },
+      {
+        "body": "In your CloudFront distribution settings, assign your ACM certificate and add your custom domain names (example.com, www.example.com) to the 'Alternate Domain Names (CNAMEs)' field."
+      },
+      {
+        "body": "Once CloudFront is deployed (can take 10-20 min), go to Route 53. Create an 'A' record (Alias) for your naked domain (example.com) and 'www' subdomain (www.example.com). Point both aliases to your CloudFront distribution."
+      },
+      {
+        "body": "Ensure your S3 bucket policy allows CloudFront to access its content. A common pattern is to use an Origin Access Control (OAC) with CloudFront to restrict direct S3 access and enhance security."
+      },
+      {
+        "body": "Configure CloudFront to redirect all HTTP traffic to HTTPS. This is an option directly within the CloudFront distribution settings under 'Viewer Protocol Policy'."
+      },
+      {
+        "body": "If you're using a naked domain (example.com) and want to redirect to www.example.com (or vice versa), you can set up a second S3 bucket for the redirect, then point a CloudFront distribution at *that* bucket."
+      }
+    ]
+  }
+]

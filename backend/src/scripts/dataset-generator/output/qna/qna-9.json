@@ -1,0 +1,172 @@
+[
+  {
+    "category": "Q&A",
+    "title": "Understanding `keyof typeof` in a generic function",
+    "body": "I'm trying to create a generic function that takes an object and a key, and returns the value at that key. I've seen `keyof typeof` used in examples, but I'm struggling to apply it correctly when the object itself is a generic type. How do I properly type the key to ensure it's a valid property of the generic object, and what should the return type be?",
+    "replies": [
+      {
+        "body": "You're likely looking for `K extends keyof T` for your key type parameter. This constrains `K` to be one of the literal string/symbol keys of `T`."
+      },
+      {
+        "body": "The return type will simply be `T[K]`. TypeScript's indexed access types handle this perfectly. So, `function getProp<T extends object, K extends keyof T>(obj: T, key: K): T[K] { return obj[key]; }`"
+      },
+      {
+        "body": "The `typeof` operator is generally used on a *value* to extract its TypeScript type, like `type MyType = typeof myVariable;`. When working with generics, `T` *is* already a type, so you don't need `typeof` on `T` itself."
+      },
+      {
+        "body": "Remember to add a constraint like `T extends object` to your generic `T` to ensure it's something you can actually access properties on. Otherwise, `T` could be `string`, `number`, etc., which don't have arbitrary keys."
+      },
+      {
+        "body": "If you don't add `T extends object`, then `keyof T` might resolve to `string | number | symbol` which is too broad for accessing specific properties safely. The `object` constraint narrows it down."
+      },
+      {
+        "body": "A practical example: `interface User { name: string; age: number; } const user = { name: 'Alice', age: 30 }; const userName = getProp(user, 'name'); // userName is string; getProp(user, 'email') would be a type error.`"
+      },
+      {
+        "body": "This pattern is fundamental for type-safe property access in generic contexts. It's a cornerstone of many utility functions and libraries."
+      },
+      {
+        "body": "What if `T` could be `any`? If `T` is `any`, then `keyof any` is `string | number | symbol`, making `K` very loose. Always try to constrain `T` as much as possible to maintain type safety."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "When to use Partial, Pick, and Omit?",
+    "body": "I'm new to TypeScript and constantly see `Partial<T>`, `Pick<T, K>`, and `Omit<T, K>` being used. They all seem related to modifying existing types, but I'm confused about their specific use cases. Can someone explain when to choose one over the others, perhaps with simple examples?",
+    "replies": [
+      {
+        "body": "`Partial<T>` makes all properties of `T` optional. Use it when you need an object that might have some or all of the properties of `T`, but none are strictly required. E.g., for an update function where not all fields are provided."
+      },
+      {
+        "body": "Example for `Partial`: `interface User { name: string; age: number; } type PartialUser = Partial<User>; // { name?: string; age?: number; }` This is great for forms or API payloads where you're only sending a subset of fields."
+      },
+      {
+        "body": "`Pick<T, K>` constructs a type by picking a set of properties `K` from type `T`. Use it when you only want a *subset* of properties from an existing type. E.g., for a function that only needs a user's ID and name, not their whole profile."
+      },
+      {
+        "body": "Example for `Pick`: `interface Product { id: string; name: string; price: number; description: string; } type ProductSummary = Pick<Product, 'id' | 'name' | 'price'>; // { id: string; name: string; price: number; }`"
+      },
+      {
+        "body": "`Omit<T, K>` constructs a type by omitting a set of properties `K` from type `T`. It's the opposite of `Pick`. Use it when you want *most* properties from `T` but want to exclude a few specific ones. E.g., when passing an object to a component but want to hide an internal property."
+      },
+      {
+        "body": "Example for `Omit`: `interface Task { id: string; title: string; description: string; createdAt: Date; } type NewTask = Omit<Task, 'id' | 'createdAt'>; // { title: string; description: string; }` This is useful for creating DTOs for new entries."
+      },
+      {
+        "body": "In summary: `Partial` for 'all optional', `Pick` for 'only these properties', `Omit` for 'all but these properties'. Choose based on whether you're defining what *is* included or what *is not*."
+      },
+      {
+        "body": "You can also combine them! For instance, `Partial<Pick<T, K>>` would make a subset of properties optional. Or `Pick<T, K> & Partial<Omit<T, K>>` for more complex scenarios."
+      },
+      {
+        "body": "Often, if you find yourself writing `Pick<T, 'a' | 'b' | 'c' | 'd'>` and it's a long list, consider if `Omit<T, 'e' | 'f'>` might be cleaner if `e` and `f` are the only ones you *don't* want."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Demystifying `infer` in TypeScript conditional types",
+    "body": "I'm trying to wrap my head around the `infer` keyword in TypeScript's conditional types. I've seen it used in quite complex type definitions, but I don't really understand its purpose or how it works. Can someone provide a simple explanation with clear examples?",
+    "replies": [
+      {
+        "body": "`infer` is used in the `extends` clause of a conditional type (`T extends U ? X : Y`) to 'capture' a type that's part of `U`. It allows you to introduce a new type variable *within* the conditional type itself."
+      },
+      {
+        "body": "Think of it like pattern matching for types. If a type `T` matches a certain structure (defined by `U`), `infer` lets you extract a specific part of that structure and use it in the 'true' branch (`X`)."
+      },
+      {
+        "body": "Simplest example: `type GetReturnType<T> = T extends (...args: any[]) => infer R ? R : never;` Here, if `T` is a function type, we `infer` its return type as `R` and then return `R`."
+      },
+      {
+        "body": "Without `infer`, capturing arbitrary parts of a type's structure would be much harder, if not impossible, for many advanced utility types like `ReturnType` or `Parameters`."
+      },
+      {
+        "body": "Another common use case is extracting array element types: `type GetArrayElementType<T> = T extends (infer ElementType)[] ? ElementType : T;` If `T` is an array, `ElementType` captures the type of its elements."
+      },
+      {
+        "body": "The `infer` keyword *only* works within the `extends` constraint of a conditional type. You can't use it outside of that context."
+      },
+      {
+        "body": "You can `infer` multiple types too. For example, `type GetFunctionArgs<T> = T extends (...args: infer A) => any ? A : never;` to get a tuple of argument types."
+      },
+      {
+        "body": "It's all about decomposition and reconstruction of types based on their shape. `infer` gives you the tools to break down a complex type into its constituent parts dynamically."
+      },
+      {
+        "body": "It's a powerful feature, but definitely takes some time to click. Start with simple `ReturnType` and `Parameters` examples, then move to more complex type transformations."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "How to enforce a generic type parameter to be a function?",
+    "body": "I'm building a generic higher-order function in TypeScript that needs to accept another function as one of its type parameters. I want to ensure that this generic type parameter `F` always represents a function type. How can I add this constraint effectively?",
+    "replies": [
+      {
+        "body": "The most straightforward way is to use `F extends Function`. This ensures that `F` is callable. For example: `function applyAndLog<F extends Function>(func: F, ...args: Parameters<F>): ReturnType<F> { /* ... */ }`"
+      },
+      {
+        "body": "While `F extends Function` works, it's often more precise to constrain `F` to a specific function signature if you know it, e.g., `F extends (...args: any[]) => any`. This gives you more control over `Parameters<F>` and `ReturnType<F>`."
+      },
+      {
+        "body": "If you need even more specificity, like a function that takes a string and returns a number, you'd do `F extends (arg: string) => number`. This allows you to work with specific argument and return types."
+      },
+      {
+        "body": "Using `F extends (...args: any[]) => any` is generally preferred over `extends Function` because `Function` is a global type that can be quite loose, and its `call`/`apply`/`bind` methods can sometimes interfere with strict type checking."
+      },
+      {
+        "body": "Example: `function compose<F1 extends (...args: any[]) => any, F2 extends (arg: ReturnType<F1>) => any>(f1: F1, f2: F2): (...args: Parameters<F1>) => ReturnType<F2> { return (...args) => f2(f1(...args)); }`"
+      },
+      {
+        "body": "The key is to leverage `extends` in your generic type parameter declaration. It's how TypeScript allows you to define boundaries for what `F` can be."
+      },
+      {
+        "body": "Don't forget that if your function doesn't take arguments or return anything, you can use `() => void` in the constraint. For example, `F extends () => void`."
+      },
+      {
+        "body": "This kind of constraint is crucial for building type-safe functional programming utilities and higher-order components/functions in TypeScript."
+      },
+      {
+        "body": "Consider `unknown` instead of `any` for arguments/return types if you want to be stricter: `F extends (...args: unknown[]) => unknown`. This would force more careful handling of the function's inputs and outputs."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Building a custom `DeepPartial<T>` utility type",
+    "body": "I'm looking to create a TypeScript utility type similar to `Partial<T>`, but one that applies recursively to all nested objects and arrays within `T`. The standard `Partial` only makes top-level properties optional. How can I implement `DeepPartial<T>`?",
+    "replies": [
+      {
+        "body": "This is a classic recursive type challenge! You'll need to use conditional types and map types. The basic idea is to check if a property is an object (but not an array or a function) and, if so, apply `DeepPartial` to it."
+      },
+      {
+        "body": "Here's a common implementation pattern: `type DeepPartial<T> = { [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]; };` This works for simple nested objects."
+      },
+      {
+        "body": "However, that simple version has a flaw: `T[P] extends object` will also match arrays and functions, which you usually don't want to make 'deeply partial' in the same way. Arrays should become `DeepPartial<ElementType>[]` and functions should remain unchanged."
+      },
+      {
+        "body": "To handle arrays specifically, you'd add another condition: `T[P] extends (infer U)[] ? DeepPartial<U>[] : ...` before the `T[P] extends object` check. Order matters in conditional types."
+      },
+      {
+        "body": "A more robust `DeepPartial` might look like: `type DeepPartial<T> = T extends object ? { [P in keyof T]?: T[P] extends (infer U)[] ? DeepPartial<U>[] : T[P] extends object ? DeepPartial<T[P]> : T[P]; } : T;`"
+      },
+      {
+        "body": "And what about `null` or `undefined`? If your base type `T` can have `null` or `undefined` properties, `DeepPartial` will correctly make them optional, but `null` itself won't be 'deeply partialed'. That's usually the desired behavior."
+      },
+      {
+        "body": "Also, consider primitive types. If `T` is a primitive (like `string` or `number`), the first `T extends object ? ... : T` condition will correctly return `T` itself, which is what you want."
+      },
+      {
+        "body": "This pattern is incredibly useful for creating configuration objects, update payloads, or any scenario where you need a flexible, partially defined version of a complex data structure."
+      },
+      {
+        "body": "The `T extends object` check at the very beginning is crucial. It ensures that the mapped type `{ [P in keyof T]?: ... }` only applies if `T` is actually an object type, preventing issues with primitives."
+      },
+      {
+        "body": "For functions, if you don't want them to be made optional or deeply partial, you'd extend the conditional type further: `T[P] extends Function ? T[P] : T[P] extends (infer U)[] ? ...` Placing `Function` check before `object` is important."
+      }
+    ]
+  }
+]

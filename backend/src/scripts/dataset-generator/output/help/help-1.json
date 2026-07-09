@@ -1,0 +1,157 @@
+[
+  {
+    "category": "Help",
+    "title": "Docker Compose service exiting immediately on startup",
+    "body": "I have a simple `docker-compose.yml` file setting up a Python Flask app and a PostgreSQL database. The database starts fine, but my Flask app container exits immediately with exit code 0 or 1, and I can't figure out why. `docker logs` shows nothing before it crashes. Any ideas on how to debug this?",
+    "replies": [
+      {
+        "body": "Exit code 0 usually means the process completed successfully, which might not be what you want for a server. Exit code 1 means an unhandled error. Can you share your `docker-compose.yml` and the `Dockerfile` for your Flask app? The `CMD` or `ENTRYPOINT` in your Dockerfile is usually the culprit here."
+      },
+      {
+        "body": "First thing to check: run `docker logs <container_id_or_name>` immediately after it exits. Even if it's quick, there might be a few lines. Also, check if your Flask app's startup script or main process is designed to run in the foreground. If it's a script that executes and then terminates, the container will stop."
+      },
+      {
+        "body": "Try adding `tty: true` and `stdin_open: true` to your service in `docker-compose.yml`. This can sometimes keep the container alive long enough to see initial errors or interact with it. Also, try running the `CMD` directly with `docker run -it --entrypoint /bin/bash <image_name>` and then execute your app's startup command manually."
+      },
+      {
+        "body": "Make sure you don't have a `healthcheck` defined that's failing and causing Docker to restart/stop the container repeatedly. Also, check if any host-mounted volumes have correct permissions. Sometimes the app can't write to its logs or temp files and crashes."
+      },
+      {
+        "body": "Are you using `wait-for-it.sh` or similar for database dependency? If your Flask app tries to connect to the DB before it's ready, it might crash. Add `depends_on` and a `healthcheck` on the DB service, and ensure your app has retry logic for DB connections."
+      },
+      {
+        "body": "Often, an exit code 1 or 0 with no logs means the container's main process (defined by CMD/ENTRYPOINT) finished its job or failed to start the intended long-running process. For example, if your CMD is `python my_script.py` and `my_script.py` just prints 'Hello' and exits, the container will exit. Ensure your Flask app server command is correct and foregrounded."
+      },
+      {
+        "body": "Check resource limits in your `docker-compose.yml`. If you've set very low `mem_limit` or `cpu_shares`, the app might not even have enough resources to initialize before the kernel kills it or it self-terminates."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "My Docker container keeps crashing with exit code 137 (OOM)",
+    "body": "I have a Docker container running a data processing job, and it repeatedly crashes with exit code 137. I've narrowed it down to likely being an Out-Of-Memory (OOM) error. I've tried increasing memory limits in `docker-compose.yml`, but it still happens. How can I properly diagnose and fix this?",
+    "replies": [
+      {
+        "body": "Exit code 137 definitely points to OOM or a kill signal. First, use `docker stats <container_id_or_name>` while the container is running to monitor its live memory usage. This will give you a real-time view of how much RAM it's consuming before it crashes."
+      },
+      {
+        "body": "While `docker stats` is good for real-time, for post-mortem analysis, check `dmesg` on your Docker host. The Linux kernel often logs OOM Killer events there, which can confirm if it was indeed the kernel killing your process due to memory pressure."
+      },
+      {
+        "body": "Are you sure your application isn't leaking memory? Even with increased limits, if the app has a significant leak, it will eventually consume all available memory. Consider profiling your application's memory usage if it's custom code."
+      },
+      {
+        "body": "If you're using `mem_limit` in `docker-compose.yml`, try setting `mem_swap_limit` as well. By default, `mem_swap_limit` is set to `mem_limit * 2`, meaning it allows swap space. If you want to strictly enforce no swap, set both `mem_limit` and `mem_swap_limit` to the same value."
+      },
+      {
+        "body": "Sometimes, the base image itself can be memory-hungry. If you're using a large base image (e.g., full Ubuntu with lots of packages), consider switching to a smaller base like Alpine or a minimal distribution if possible, and only install what you need."
+      },
+      {
+        "body": "Don't just increase memory blindly. Try to understand *where* the memory is being used. Is it during a specific phase of your data processing job? Can you process data in smaller chunks or stream it to reduce peak memory requirements?"
+      },
+      {
+        "body": "Could there be other processes on your Docker host consuming a lot of memory, leading to overall system memory pressure even if your container has a generous limit? Check `free -h` and `top` on the host to rule out host-level OOM issues."
+      },
+      {
+        "body": "If you're using Java, ensure you've properly configured the JVM's memory settings within the container, like `-Xmx` and `-Xms`, to be less than or equal to the container's `mem_limit`. The JVM by default might try to grab more than available in the cgroup."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Struggling to link two services in Docker Compose network - connection refused",
+    "body": "I have a `docker-compose.yml` file with two services: a `web` service (Node.js app) and a `db` service (MongoDB). My Node.js app is giving 'connection refused' when trying to connect to MongoDB, even though they're in the same `docker-compose.yml`. What am I missing? I thought services in Compose could talk to each other by their service names.",
+    "replies": [
+      {
+        "body": "You're right, services in the same `docker-compose.yml` are on the same default bridge network and should be able to communicate using their service names. The most common reasons for 'connection refused' are incorrect port, database not being ready, or incorrect hostname."
+      },
+      {
+        "body": "Double-check the hostname your Node.js app is using. It should be `db` (the service name), not `localhost` or `127.0.0.1`. Also, verify the port. MongoDB usually runs on `27017`. Is your Node app trying to connect to the correct port?"
+      },
+      {
+        "body": "Ensure the `db` service is actually running and listening on the expected port *inside* its container. You can `docker exec -it <db_container_id> sh` (or `bash`) and then use `netstat -tulnp` (if installed) or `lsof -i :27017` to confirm the process is listening."
+      },
+      {
+        "body": "Are you exposing the MongoDB port in your `docker-compose.yml` for the `db` service? While not strictly necessary for inter-service communication *within* the Compose network, sometimes developers forget to configure the database itself to listen on all interfaces (0.0.0.0) instead of just localhost (127.0.0.1)."
+      },
+      {
+        "body": "Add `depends_on: - db` to your `web` service definition. While this doesn't guarantee the database is *ready*, it ensures the DB container starts before the web container. For actual readiness, consider using `healthcheck` on the `db` service and `depends_on` with `condition: service_healthy` on `web` (Compose V3.4+)."
+      },
+      {
+        "body": "Check your MongoDB configuration inside its container. By default, some MongoDB configurations might bind to `127.0.0.1` only. You might need to set `bindIp: 0.0.0.0` in your `mongod.conf` or as a command-line argument to allow connections from other containers on the network."
+      },
+      {
+        "body": "Sometimes, DNS resolution inside the Docker network can be flaky, though it's rare. You can try `ping db` from inside your `web` container (`docker exec -it <web_container_id> ping db`) to ensure the hostname resolves to an IP address."
+      },
+      {
+        "body": "Make sure there aren't any custom network definitions in your `docker-compose.yml` that might be isolating the services. If you've defined a `networks:` block, ensure both services are explicitly assigned to the same network."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Docker image builds but container exits immediately without error",
+    "body": "I've created a custom Dockerfile for my application. It builds successfully, `docker build -t my-app .` works fine. However, when I try to run it with `docker run my-app`, the container starts and immediately stops, without any error messages in `docker logs`. What's going on?",
+    "replies": [
+      {
+        "body": "This is a classic! It almost always means your container's main process (defined by `CMD` or `ENTRYPOINT` in your Dockerfile) is not a long-running process. If it's a script that executes and then terminates, the container will exit because there's nothing left for it to do."
+      },
+      {
+        "body": "To debug, try running the container with an interactive shell and then manually execute your application's command. For example: `docker run -it --entrypoint /bin/bash my-app`. Once inside, try running `your_app_command` and see its output."
+      },
+      {
+        "body": "Ensure your `CMD` or `ENTRYPOINT` is executing your application in the foreground. If your application tries to daemonize itself (e.g., run as a background service), Docker will think the main process has exited and stop the container."
+      },
+      {
+        "body": "If you just want to keep the container running for inspection, you can temporarily change your `CMD` to `CMD [\"tail\", \"-f\", \"/dev/null\"]`. This will keep the container alive indefinitely, allowing you to `docker exec` into it and investigate."
+      },
+      {
+        "body": "Check the base image you're using. Some base images (like `scratch` or very minimal ones) might not have common utilities (`bash`, `sh`, `ls`) needed by your `CMD` if it's complex or relies on a shell. Ensure your `ENTRYPOINT` and `CMD` are fully qualified paths if necessary."
+      },
+      {
+        "body": "Review your `Dockerfile` for any `RUN` commands that might unintentionally replace your intended `CMD`/`ENTRYPOINT` with something that exits. Also, make sure you're not overriding the `CMD` with an empty one during `docker run`."
+      },
+      {
+        "body": "Is your application relying on external resources or environment variables that aren't being passed during `docker run`? A misconfigured application might fail to start silently, leading to an immediate exit. Test with explicit `-e` flags or a `.env` file for `docker compose`."
+      },
+      {
+        "body": "Make sure your `CMD` command is specified in the 'exec' form (JSON array, e.g., `CMD [\"python\", \"app.py\"]`) rather than the 'shell' form (`CMD python app.py`). The exec form is generally preferred and can sometimes behave more predictably regarding process lifecycle."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Docker Compose volume mount permission denied issues",
+    "body": "I'm trying to mount a host directory into my Docker container using `volumes:` in `docker-compose.yml`, but the application inside the container keeps getting 'permission denied' errors when it tries to write to that directory. I'm on Linux. How do I fix this?",
+    "replies": [
+      {
+        "body": "This is a very common issue on Linux! It's almost always a UID/GID mismatch. The user running the process *inside* the container doesn't have the necessary permissions on the *host* directory. Docker passes the host directory as-is."
+      },
+      {
+        "body": "First, find out the UID and GID of the user running your application inside the container. You can `docker exec -it <container_id> id` to see this. Then, on your host, `sudo chown -R <container_uid>:<container_gid> /path/to/host/directory` to match."
+      },
+      {
+        "body": "Alternatively, you can tell Docker Compose to run the container as a specific user. In your `docker-compose.yml`, add `user: \"$(id -u):$(id -g)\"` to your service definition. This will make the container run as your host user, usually resolving permissions."
+      },
+      {
+        "body": "Be cautious with `chmod 777` on the host directory. While it works, it's generally not recommended for security reasons. Try to be more specific with `chmod` (e.g., `chmod 775` or `chmod g+w`) and combine it with the `chown` approach."
+      },
+      {
+        "body": "If you're using SELinux (like on Fedora/RHEL/CentOS), it's likely preventing the container from accessing the host volume. You can try adding `:z` or `:Z` to your volume mount in `docker-compose.yml` (e.g., `./data:/app/data:z`) to tell SELinux to allow access. `:z` allows multiple containers, `:Z` only allows the current one."
+      },
+      {
+        "body": "Check if your application inside the container is creating new files or directories. If so, `umask` settings inside the container might be relevant. Also, if the application *drops* privileges after starting, the initial user might not be the problem."
+      },
+      {
+        "body": "Consider using named volumes instead of bind mounts if you don't absolutely need the host directory to be directly accessible. Named volumes are managed by Docker and often have more permissive default permissions within the container, avoiding host UID/GID issues."
+      },
+      {
+        "body": "Sometimes, the issue isn't the mounted directory itself, but a subdirectory or file *within* it that has stricter permissions. Recursively check permissions with `ls -laR /path/to/host/directory`."
+      },
+      {
+        "body": "Verify that your `Dockerfile` doesn't explicitly `USER` switch to a different user *after* your application starts, which might then conflict with the volume permissions setup for the initial user."
+      }
+    ]
+  }
+]

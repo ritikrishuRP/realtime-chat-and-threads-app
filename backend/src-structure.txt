@@ -1,0 +1,59 @@
+Folder PATH listing
+Volume serial number is 00000226 A8AD:4C8B
+C:\USERS\RISHU\DESKTOP\REALTIME_APP\BACKEND\SRC
+¦   app.ts
+¦   server.ts
+¦   
++---config
+¦       clerk.ts
+¦       cloudinary.ts
+¦       env.ts
+¦       
++---db
+¦       db.ts
+¦       migrate.ts
+¦       
++---lib
+¦       errors.ts
+¦       logger.ts
+¦       
++---middleware
+¦       erroHandler.ts
+¦       notFoundHandler.ts
+¦       
++---migrations
+¦       0001_users.sql
+¦       0002_threads_core.sql
+¦       0003_replies_like.sql
+¦       0004_notifications.sql
+¦       0005_chat.sql
+¦       
++---modules
+¦   +---chat
+¦   ¦       chat.service.ts
+¦   ¦       
+¦   +---notifications
+¦   ¦       notification.service.ts
+¦   ¦       notification.types.ts
+¦   ¦       
+¦   +---threads
+¦   ¦       replies.repository.ts
+¦   ¦       threads.repository.ts
+¦   ¦       threads.types.ts
+¦   ¦       
+¦   +---users
+¦           user.repository.ts
+¦           user.service.ts
+¦           user.types.ts
+¦           
++---realtime
+¦       io.ts
+¦       
++---routes
+        chat.routes.ts
+        index.ts
+        notifications.routes.ts
+        threads.routes.ts
+        upload.routes.ts
+        user.routes.ts
+        

@@ -1,18 +1,23 @@
-'use client'
-import { apiGet, createBrowserApiClient } from "@/lib/api-client";
-import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { useMemo } from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Category, ThreadDetail } from "@/types/thread";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { apiGet, createBrowserApiClient } from "@/lib/api-client";
+import { Category, ThreadDetail } from "@/types/thread";
+import { useAuth } from "@clerk/nextjs";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
 const NewThreadSchema = z.object({
   title: z.string().trim().min(5, "Title is too short"),
@@ -22,26 +27,26 @@ const NewThreadSchema = z.object({
 
 type NewThreadFormValues = z.infer<typeof NewThreadSchema>;
 
-function NewThreadPage() {
-    const { getToken } = useAuth();
-    const router = useRouter();
+function NewThreadsPage() {
+  const { getToken } = useAuth();
+  const router = useRouter();
 
-    const apiClient = useMemo(() => createBrowserApiClient(getToken), [getToken]);
+  const apiClient = useMemo(() => createBrowserApiClient(getToken), [getToken]);
 
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const form = useForm<NewThreadFormValues>({
-        resolver: zodResolver(NewThreadSchema),
-        defaultValues: {
-            title: "",
-            body: "",
-            categorySlug: "",
-        },
-    });
+  const form = useForm<NewThreadFormValues>({
+    resolver: zodResolver(NewThreadSchema),
+    defaultValues: {
+      title: "",
+      body: "",
+      categorySlug: "",
+    },
+  });
 
-     useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
 
     async function load() {
@@ -95,9 +100,8 @@ function NewThreadPage() {
     }
   }
 
-
-    return (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Start a new thread
@@ -185,8 +189,7 @@ function NewThreadPage() {
         </CardContent>
       </Card>
     </div>
-    )
+  );
 }
 
-export default NewThreadPage
-
+export default NewThreadsPage;

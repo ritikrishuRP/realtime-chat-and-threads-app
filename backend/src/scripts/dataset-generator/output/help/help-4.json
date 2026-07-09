@@ -1,0 +1,166 @@
+[
+  {
+    "category": "Help",
+    "title": "Struggling with complex state in React functional components, useState vs useReducer?",
+    "body": "I have a component with many interdependent state variables. Currently using multiple `useState` calls, but it's becoming hard to manage updates that affect several parts of the state. Should I switch to `useReducer`? Any best practices for when to choose one over the other? My component's state includes form data, loading indicators, and error messages, all needing coordinated updates.",
+    "replies": [
+      {
+        "body": "Definitely `useReducer` for complex state logic, especially when state transitions involve multiple values or depend on the previous state. It centralizes state updates and makes the logic more predictable."
+      },
+      {
+        "body": "Agree with `useReducer`. If your updates depend on previous state or involve multiple fields, `useReducer` is cleaner. It's basically a small Redux-like store for your component."
+      },
+      {
+        "body": "Also, `useReducer` helps avoid 'callback hell' for dispatching actions from nested components if you pass dispatch down. Plus, dispatch is stable across renders, so you don't need to memoize it."
+      },
+      {
+        "body": "Consider `immer` with `useState` or `useReducer` if you want to simplify immutable updates. It allows you to 'mutate' state directly within a reducer or updater function, and Immer handles the immutability for you."
+      },
+      {
+        "body": "For very complex, global or near-global state, `useContext` with `useReducer` is a common pattern. This creates a mini-Redux store accessible to multiple components without prop drilling."
+      },
+      {
+        "body": "The rule of thumb I use: if it feels like Redux (actions, reducers), use `useReducer`. If it's just a few independent values, `useState` is fine. Your use case sounds like a perfect fit for `useReducer`."
+      },
+      {
+        "body": "Another vote for `useReducer`. It also makes testing state transitions easier because you can test your reducer function in isolation, feeding it state and actions and asserting the new state."
+      },
+      {
+        "body": "Keep in mind that `useReducer` might be overkill for very simple cases. The learning curve is slightly steeper than `useState` initially. But for your scenario, it sounds appropriate."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "React Hydration Error: Did not expect server HTML to contain a <p> in <div>",
+    "body": "I'm getting a hydration error in my Next.js app. The console says 'Did not expect server HTML to contain a <p> in <div>' and points to a specific component. I've checked my components, and the server-rendered and client-rendered markup *seem* identical. What could be causing this cryptic error, and how do I debug it effectively?",
+    "replies": [
+      {
+        "body": "This is a classic hydration error. The most common cause is a mismatch between what the server renders and what the client expects to render. Even a single space or an empty text node can cause it."
+      },
+      {
+        "body": "Check for conditional rendering based on browser-specific APIs (e.g., `window` object). If a component renders differently client-side because of `window` existence checks, it'll cause this. Use `useEffect` for client-only rendering or `typeof window !== 'undefined'` checks."
+      },
+      {
+        "body": "Browser extensions can also interfere! Try running your app in an incognito window without extensions. Sometimes things like ad blockers or grammar checkers inject markup."
+      },
+      {
+        "body": "Another common culprit is directly injecting HTML from a CMS or external source that might contain different whitespace or invalid nested tags that the browser corrects, but React doesn't like."
+      },
+      {
+        "body": "Are you using `dangerouslySetInnerHTML` anywhere? If the content within that prop differs between server and client, or if the HTML isn't perfectly valid, it can lead to hydration issues."
+      },
+      {
+        "body": "A subtle one: components that render based on `Math.random()` or `Date.now()`. These values will be different on the server and client, causing a mismatch. If you need dynamic values, ensure they are handled client-side after initial render or are consistent."
+      },
+      {
+        "body": "To debug, try commenting out sections of the component in question until the error disappears. This helps narrow down the exact problematic line. You can also use `console.log` on both server and client to compare the `outerHTML` of the suspicious elements."
+      },
+      {
+        "body": "Make sure your React version and ReactDOM version are exactly the same on both client and server. Mismatched versions can sometimes lead to subtle rendering differences."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Best practices for creating reusable custom React Hooks?",
+    "body": "I'm starting to build custom hooks to encapsulate logic (e.g., `useFetchData`, `useLocalStorage`). What are some key best practices to ensure they're reusable, testable, and maintainable? Specifically regarding dependencies, memoization, and how to structure the return values from the hook.",
+    "replies": [
+      {
+        "body": "Always start your custom hook names with `use`. This is a convention that helps ESLint enforce the Rules of Hooks and signals to other developers that it's a hook."
+      },
+      {
+        "body": "Hooks should encapsulate a single, related piece of logic. Avoid creating 'god hooks' that do too many things. If it gets too big, break it down into smaller, more focused hooks."
+      },
+      {
+        "body": "Carefully manage dependency arrays for `useEffect`, `useCallback`, and `useMemo` within your custom hook. Expose options for consumers to control these dependencies if necessary, or provide stable functions/values."
+      },
+      {
+        "body": "Return values as an object (`{ value, setValue, loading, error }`) rather than an array (`[value, setValue, loading, error]`). Objects are more readable, especially as the number of returned values grows, and make refactoring easier."
+      },
+      {
+        "body": "Provide sensible default options for your hook's parameters. This makes it easier for consumers to get started without needing to configure everything upfront."
+      },
+      {
+        "body": "Test your custom hooks in isolation. Libraries like `@testing-library/react-hooks` (now `@testing-library/react` has `renderHook`) are excellent for this, allowing you to test the logic without rendering an entire component."
+      },
+      {
+        "body": "Ensure your hook's internal state and side effects are properly cleaned up. For example, if it sets up event listeners, make sure to remove them in a `useEffect` cleanup function."
+      },
+      {
+        "body": "Consider using `useRef` for values that need to persist across renders but don't cause re-renders when updated, like mutable instance variables or DOM references. This can help with performance or specific side effects."
+      },
+      {
+        "body": "Document your hooks clearly: what parameters they accept, what they return, and any important side effects or usage notes. Good documentation is key for reusability."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Understanding and debugging `useEffect` dependency array warnings",
+    "body": "I frequently get ESLint warnings about missing dependencies in `useEffect` (e.g., 'React Hook useEffect has a missing dependency: 'someVar'. Either include it or remove the dependency array.'). Sometimes adding them causes infinite loops or unexpected re-renders. What's the best way to properly manage `useEffect` dependencies without breaking my app or silencing the linter?",
+    "replies": [
+      {
+        "body": "The ESLint warning is usually correct. Missing dependencies mean your effect closure is capturing stale values. If adding them causes issues, it points to a deeper problem with how your dependencies are being updated."
+      },
+      {
+        "body": "For functions that are dependencies, wrap them in `useCallback`. This ensures the function identity is stable across renders, preventing `useEffect` from re-running unnecessarily because the function reference changed."
+      },
+      {
+        "body": "For objects or arrays that are dependencies, wrap them in `useMemo` if they are not primitives and you want to prevent re-renders when their content (not reference) is unchanged. Be careful not to overuse `useMemo` though."
+      },
+      {
+        "body": "If a value *truly* doesn't need to trigger the effect, even if it's used inside, consider using `useRef`. Store the mutable value in a ref, and access it via `ref.current` inside the effect. This bypasses the dependency array for that specific value."
+      },
+      {
+        "body": "Understand closures: `useEffect` captures variables from its scope. If a variable changes *between* renders and isn't in the dependency array, the effect will use the old, stale value. This is a common source of bugs."
+      },
+      {
+        "body": "An empty dependency array `[]` means the effect runs once on mount and cleans up on unmount. Use this for truly static setup/teardown, like global event listeners that don't depend on component state or props."
+      },
+      {
+        "body": "If you're dealing with state setters (e.g., `setState`), they are stable and don't need to be added to the dependency array. The linter usually knows this."
+      },
+      {
+        "body": "Sometimes, the issue isn't with the effect itself, but with how a parent component is passing down props or functions. Ensure parent components are also memoizing values or functions that are passed down to children using `useCallback` or `useMemo`."
+      },
+      {
+        "body": "As a last resort, if you absolutely know what you're doing and want to silence a specific warning, you can use `// eslint-disable-next-line react-hooks/exhaustive-deps`. But this should be rare and well-justified."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "How to handle asynchronous data fetching during React SSR and avoid hydration issues?",
+    "body": "I'm building an SSR app with React from scratch (not using Next.js or Remix). I have components that fetch data. What's the recommended pattern to ensure data is available on the server-rendered HTML so that hydration doesn't fail on the client due to missing content? I'm getting hydration errors because the client tries to render with no data while the server had it.",
+    "replies": [
+      {
+        "body": "The core idea for custom SSR is to pre-fetch all necessary data on the server *before* rendering your React components. This data then gets passed down to your components during the server render."
+      },
+      {
+        "body": "Collect all data promises: Your SSR entry point should identify all data-fetching needs for the current route and collect their promises. A common pattern is to have a static `getInitialProps` or `fetchData` method on route components."
+      },
+      {
+        "body": "Use `Promise.all`: Await all these collected promises using `Promise.all` on the server. Once all data is resolved, you'll have the complete initial state."
+      },
+      {
+        "body": "Pass data via props or context: Inject this resolved data into your root React component, either as props or through a React Context provider. Your components then consume this data during the initial server render."
+      },
+      {
+        "body": "Serialize and rehydrate state: Crucially, you need to serialize this initial data/state and embed it directly into the HTML response, typically within a `<script>` tag. Something like `window.__INITIAL_DATA__ = ${JSON.stringify(data)}`."
+      },
+      {
+        "body": "Client-side rehydration: On the client, before your React app hydrates, read this `window.__INITIAL_DATA__` and use it to initialize your client-side state management (e.g., Redux, Zustand, or even a simple `useState` in the root component). This ensures the client starts with the same data the server rendered."
+      },
+      {
+        "body": "Avoid re-fetching on the client immediately if data is present: Your client-side data fetching logic should check if `window.__INITIAL_DATA__` exists and use that instead of making another API call, at least for the initial render. Subsequent data fetching can happen as usual."
+      },
+      {
+        "body": "Consider a library for data fetching at the root like React Query or SWR, which have built-in SSR support and can help manage this state serialization and rehydration boilerplate."
+      },
+      {
+        "body": "Ensure strict HTML validation. Minor differences in whitespace or element structure between server-generated and client-expected HTML can also trigger hydration errors, even if data is consistent."
+      }
+    ]
+  }
+]

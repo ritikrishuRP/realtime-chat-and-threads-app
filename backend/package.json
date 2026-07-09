@@ -6,13 +6,17 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "migrate": "tsx src/db/migrate.ts"
+    "migrate": "tsx src/db/migrate.ts",
+    "seed": "tsx src/scripts/seed/index.ts",
+    "generate:dataset": "tsx src/scripts/dataset-generator/generate.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@clerk/express": "^2.1.32",
+    "@faker-js/faker": "^10.5.0",
+    "@google/genai": "^2.10.0",
     "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

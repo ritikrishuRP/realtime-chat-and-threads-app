@@ -1,0 +1,157 @@
+[
+  {
+    "category": "Help",
+    "title": "Next.js dynamic route [slug].js not matching correctly",
+    "body": "I'm having trouble with dynamic routing in Next.js. I have a `pages/posts/[slug].js` file, but when I navigate to `/posts/my-first-post`, it's not rendering the component. Instead, I get a 404. I've double-checked the file name and content. Any ideas why this might be happening?",
+    "replies": [
+      {
+        "body": "Are you sure your `[slug].js` file is directly inside `pages/posts/`? Sometimes people accidentally put it in `pages/posts/[slug]/index.js` which behaves differently for some setups."
+      },
+      {
+        "body": "Check your `next.config.js` for any custom rewrites or redirects that might be interfering. A misconfigured rewrite could cause this."
+      },
+      {
+        "body": "Make sure you're not trying to use `getStaticPaths` without returning valid `paths` or `fallback: true` (or `blocking`). If you're using `getStaticProps` without `getStaticPaths`, it would only work for pre-rendered paths."
+      },
+      {
+        "body": "If you are in development, try restarting your Next.js server (`npm run dev`). Sometimes the file watcher misses changes, especially with new files or directory structures."
+      },
+      {
+        "body": "Could you share the relevant code from `[slug].js`? Specifically, how you're using `useRouter()` to access the slug, if at all. It might be a data fetching issue rather than a routing one."
+      },
+      {
+        "body": "Also, verify the casing of `[slug].js`. It must be `[slug].js` exactly, not `[Slug].js` or `[SLUG].js`."
+      },
+      {
+        "body": "Have you tried accessing `router.query.slug` inside the component? Sometimes the route itself works, but the parameter isn't being accessed correctly in the component logic, leading to an empty state that looks like a 404."
+      },
+      {
+        "body": "If it's an App Router project, the convention is `app/posts/[slug]/page.tsx`. The `pages` directory is for the Pages Router. Just confirming which one you are using."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Securing Next.js API routes for a dashboard",
+    "body": "I'm building a dashboard using Next.js and need to secure my API routes so that only authenticated users can access them. What's the recommended approach for this? I'm currently using a simple JWT for authentication on the client side, but I'm unsure how to best integrate it with API routes.",
+    "replies": [
+      {
+        "body": "You should check for the JWT in the `Authorization` header of incoming requests to your API routes. Decode it, verify its signature, and then check if the user associated with the token has the necessary permissions."
+      },
+      {
+        "body": "For server-side verification, make sure to use a secure library like `jsonwebtoken` and keep your JWT secret key in environment variables (e.g., `.env.local`) and never commit it to source control."
+      },
+      {
+        "body": "Consider using middleware (either Next.js Middleware or a custom wrapper function for your API routes) to centralize your authentication logic. This way, you don't repeat the authentication check in every API route handler."
+      },
+      {
+        "body": "If you're using a full authentication solution like NextAuth.js, it provides built-in methods to secure API routes and sessions, which simplifies things significantly."
+      },
+      {
+        "body": "Instead of passing the JWT directly, you might store it in an HttpOnly cookie on successful login. This makes it more resistant to XSS attacks, as client-side JavaScript can't access it. Your API routes would then read the cookie."
+      },
+      {
+        "body": "Remember to handle cases where the token is missing, expired, or invalid. Your API routes should return appropriate HTTP status codes like `401 Unauthorized` or `403 Forbidden`."
+      },
+      {
+        "body": "You could also implement a `session` table in your database and store a secure session ID in a cookie. The API route then validates the session ID against the database, which gives you more control over invalidating sessions."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Choosing between getServerSideProps and client-side fetching for a user profile page",
+    "body": "I'm building a user profile page in Next.js that displays user details, posts, and comments. The data changes frequently. Should I use `getServerSideProps` for initial data load or fetch everything client-side with `useEffect` and SWR/React Query? What are the performance implications for SEO and user experience?",
+    "replies": [
+      {
+        "body": "For a user profile page where data changes frequently, `getServerSideProps` is a good choice if SEO is critical or if the initial load needs to be as fast as possible for perceived performance, as it fetches data on each request."
+      },
+      {
+        "body": "If SEO isn't a primary concern (e.g., it's behind a login wall), client-side fetching with SWR or React Query offers excellent benefits like caching, revalidation, and easier management of loading/error states. You get a faster initial page load with a loading spinner, then data populates."
+      },
+      {
+        "body": "You can combine both: use `getServerSideProps` for the essential, static-like profile details (name, avatar), and then client-side fetch the dynamic parts like posts and comments. This gives you a fast initial render while keeping dynamic content fresh."
+      },
+      {
+        "body": "`getServerSideProps` will increase your server load as it executes on every request. Consider `stale-while-revalidate` caching headers if your backend supports it, even with SSR."
+      },
+      {
+        "body": "For perceived performance, a skeleton loader while client-side fetching often feels faster to users than a blank page waiting for `getServerSideProps` to complete."
+      },
+      {
+        "body": "Think about the 'cold start' for `getServerSideProps` on serverless functions. If your traffic isn't constant, this could add latency for the first few users."
+      },
+      {
+        "body": "If the profile page is public and needs to be indexed by search engines with up-to-date content, `getServerSideProps` is generally preferred over client-side fetching without proper pre-rendering."
+      },
+      {
+        "body": "Client-side fetching also gives you more flexibility with real-time updates or polling without a full page refresh, which can enhance user experience for frequently changing data."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Best practice for nested layouts in Next.js App Router",
+    "body": "I'm migrating an application to the Next.js App Router and struggling with nested layouts. I have a `(dashboard)/layout.tsx` for my authenticated section, but I also need a sub-layout for specific settings pages (e.g., `(dashboard)/settings/layout.tsx`) with a different sidebar. How do I structure this effectively so both layouts render correctly and share data?",
+    "replies": [
+      {
+        "body": "The App Router handles nested layouts naturally. Your `(dashboard)/settings/layout.tsx` will automatically wrap its children, and that entire `settings` subtree will then be wrapped by `(dashboard)/layout.tsx`. The key is that `children` prop gets passed down."
+      },
+      {
+        "body": "For passing data, if it's dynamic, you can fetch it in the respective `layout.tsx` file using `fetch` or a data fetching library. Each layout can fetch its own data and pass it to its children (e.g., via Context API for client components or directly to server components as props if they are rendered inside the layout)."
+      },
+      {
+        "body": "Remember that `layout.tsx` files are server components by default. If your sub-layout sidebar needs client-side interactivity, you'll need to mark it with `'use client'` and pass necessary props from the server component layout."
+      },
+      {
+        "body": "To achieve different sidebars, your `(dashboard)/layout.tsx` could render a 'main' sidebar. Then, your `(dashboard)/settings/layout.tsx` could simply override or conditionally render its own 'settings' sidebar, hiding the main one, or using the `children` prop to place itself alongside the main layout's content."
+      },
+      {
+        "body": "Consider using route groups `()` to organize your layouts without affecting the URL path. This is exactly what you're doing with `(dashboard)`. You can have multiple root layouts with route groups."
+      },
+      {
+        "body": "If the data is shared across many components, a React Context API (for client components) or passing props down through server components is the way to go. For server components, you might fetch data in a parent layout and pass it explicitly to its children or to a sub-layout component."
+      },
+      {
+        "body": "Don't forget that a `template.tsx` file can be used if you need to re-render the layout's content when navigating between sibling routes within that segment, which might be useful for animation or state reset."
+      },
+      {
+        "body": "For styling, ensure your CSS rules are scoped correctly to avoid conflicts between the different layout sidebars. CSS Modules or Tailwind CSS can help here."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Gracefully handling API errors and loading states in Next.js components",
+    "body": "I'm making API calls from my Next.js client components, but I find myself writing a lot of repetitive `isLoading`, `isError`, and `data` conditional rendering logic. What's the best way to manage API loading and error states gracefully across multiple components to avoid boilerplate and provide a good user experience?",
+    "replies": [
+      {
+        "body": "This is a perfect use case for a data fetching library like SWR or React Query. They abstract away the loading, error, and data states into custom hooks, automatically handle caching, revalidation, and provide dedicated error boundaries."
+      },
+      {
+        "body": "With SWR/React Query, your component code becomes much cleaner: `const { data, error, isLoading } = useMyData(); if (isLoading) return <LoadingSpinner />; if (error) return <ErrorMessage error={error} />; return <DataDisplay data={data} />;`"
+      },
+      {
+        "body": "For more complex error handling, consider creating a custom `ErrorBoundary` component. You can wrap parts of your UI that make API calls with it, and it will catch errors and display a fallback UI, preventing the whole app from crashing."
+      },
+      {
+        "body": "Implement a global loading indicator (e.g., a top progress bar like NProgress or a full-screen overlay) for global fetch operations, in addition to local loading spinners for specific data-dependent sections."
+      },
+      {
+        "body": "Provide user-friendly error messages. Instead of just showing 'Error', try to translate API error codes or messages into something actionable or understandable for the user (e.g., 'Failed to load posts. Please try again later.')."
+      },
+      {
+        "body": "You can also create a custom `useFetch` hook that encapsulates your `fetch` logic, `useState` for loading/error, and returns these states. This is a lighter alternative to SWR/React Query if your needs are simpler."
+      },
+      {
+        "body": "For forms, disable the submit button while `isLoading` and display validation errors next to relevant fields. Clear error messages when the user starts typing again."
+      },
+      {
+        "body": "Consider using a 'skeleton loader' (placeholder UI that mimics the content structure) instead of a simple spinner for a better perceived loading experience. It gives the user a hint of what's coming."
+      },
+      {
+        "body": "Client-side routing transitions in Next.js can benefit from `next/router`'s `events` for global loading indicators (`routeChangeStart`, `routeChangeComplete`, `routeChangeError`)."
+      }
+    ]
+  }
+]

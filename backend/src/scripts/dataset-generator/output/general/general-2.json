@@ -1,0 +1,157 @@
+[
+  {
+    "category": "General",
+    "title": "Best way to handle global types in a large TypeScript project?",
+    "body": "We're scaling up a monorepo with several TypeScript packages, and I'm struggling with the best pattern for defining types that are used across multiple packages (e.g., common utility types, API response interfaces). Currently, we have a `types.d.ts` file in each package, but it feels redundant. Any best practices or patterns for a global type definition approach?",
+    "replies": [
+      {
+        "body": "For a monorepo, a dedicated `shared-types` package is often the cleanest solution. You define all your common interfaces and types there and then add it as a dependency to any package that needs them. This centralizes definitions and prevents redundancy."
+      },
+      {
+        "body": "I agree with the `shared-types` package. Just make sure to keep it lean and focused. Overloading it with too many specific types can lead to unnecessary rebuilds or bundle size increases if not treeshaken properly."
+      },
+      {
+        "body": "Another approach, if the types are tightly coupled to specific domains but still shared, is to use `tsconfig.json`'s `paths` mapping. You can alias a common directory where your type files reside, making imports cleaner across packages without creating a separate package."
+      },
+      {
+        "body": "Be cautious with circular dependencies if you go the `shared-types` package route. If a type in `shared-types` depends on a type from `package-A`, and `package-A` depends on `shared-types`, you'll run into issues."
+      },
+      {
+        "body": "We use a `global.d.ts` file at the root of our monorepo for true global augmentations (e.g., adding properties to `Window` or `NodeJS.ProcessEnv`). For specific shared interfaces, the `shared-types` package is definitely superior."
+      },
+      {
+        "body": "For very simple, generic utility types (like `DeepPartial<T>`), you could even consider having them in a root `src/types/index.d.ts` and ensure your root `tsconfig.json` includes it, but for anything substantial, a dedicated package is better for explicitness."
+      },
+      {
+        "body": "Sometimes, re-exporting types from an index file in a common utility package can work too, if you already have a utility package that's imported everywhere. It reduces the number of separate packages."
+      }
+    ]
+  },
+  {
+    "category": "General",
+    "title": "Git Rebase vs. Merge: When do you prefer each?",
+    "body": "I've been on teams that strictly enforce rebase and others that prefer merge commits. I understand the technical differences, but I'm curious about real-world scenarios where you *strongly* prefer one over the other. What are your team's rules and why?",
+    "replies": [
+      {
+        "body": "Our team enforces 'rebase before push' for feature branches that aren't yet merged into `main`. This keeps our `main` branch history linear and clean, making it easier to follow changes and revert if necessary. We only use merge commits when bringing a feature branch into `main` after a successful PR."
+      },
+      {
+        "body": "I generally prefer rebase for my own local branches to keep my work clean and squash small commits into logical chunks before pushing. For integrating a feature into a shared branch (like `develop` or `main`), I lean towards merge commits to preserve the history of the feature branch's development."
+      },
+      {
+        "body": "Merge commits are great for preserving the exact history of a feature branch, showing exactly when it started and finished. If traceability and explicit branch boundaries are paramount, merge is the way to go. Rebase rewrites history, making it harder to debug if something went wrong during a rebase."
+      },
+      {
+        "body": "Using `git rebase -i` to clean up local commits is a superpower. It allows you to transform a messy development history into a clear, logical sequence of changes before it hits a public branch. This greatly improves code review experience."
+      },
+      {
+        "body": "The main argument for merge is that it doesn't rewrite history, which is generally safer, especially for less experienced developers. Rebase can be dangerous if you rebase a branch that others are actively working on, as it can cause duplicate work and conflicts."
+      },
+      {
+        "body": "We use a 'squash and merge' strategy for pull requests. It gives us a clean, linear history on `main` (like rebase), but still records the fact that it was a feature branch that was merged. It's a good middle ground for many teams."
+      },
+      {
+        "body": "If you're using a Git workflow like Git Flow, merge commits are integral for tracking release branches, feature branches, and hotfixes. Trying to force rebase into that model can get complicated quickly."
+      },
+      {
+        "body": "I prefer rebase when I'm working solo on a branch and want to keep my commits tidy. As soon as a branch is shared or part of a PR, merge is usually safer for collaboration and avoiding headaches."
+      }
+    ]
+  },
+  {
+    "category": "General",
+    "title": "Must-have VS Code extensions for front-end development?",
+    "body": "Just got a new dev machine and setting up VS Code from scratch. Besides the obvious ones like Prettier and ESLint, what are some of your absolutely essential, productivity-boosting extensions for front-end work (React/Vue/Angular) that you can't live without?",
+    "replies": [
+      {
+        "body": "GitLens is an absolute game-changer. It integrates Git capabilities directly into your editor, showing you who changed what line and when. Essential for understanding code history without leaving VS Code."
+      },
+      {
+        "body": "Auto Rename Tag saves so much time. When you rename an HTML/JSX tag, it automatically renames the paired closing tag. Simple but incredibly useful."
+      },
+      {
+        "body": "Path Intellisense is a must. It autocompletes filenames in your import statements, reducing typos and speeding up file referencing."
+      },
+      {
+        "body": "For anyone working with CSS/SCSS/LESS, IntelliSense for CSS class names in HTML provides completions for global CSS class definitions. Super helpful."
+      },
+      {
+        "body": "Live Share is fantastic for pair programming or getting quick help. It allows you to share your editor and collaborate in real-time. A lifesaver for remote teams."
+      },
+      {
+        "body": "Code Spell Checker is often overlooked but invaluable. It catches typos in comments, strings, and even variable names, making your code more professional."
+      },
+      {
+        "body": "DotENV for syntax highlighting of `.env` files. If you're managing environment variables, this makes them much easier to read."
+      },
+      {
+        "body": "NPM Intellisense provides autocompletion for npm modules in import statements. Speeds up dependency imports significantly."
+      },
+      {
+        "body": "Bracket Pair Colorizer (or VS Code's native bracket pair coloring) helps immensely with readability, especially in nested JSX or complex logic blocks."
+      },
+      {
+        "body": "If you often debug or log values, Turbo Console Log can automatically insert `console.log` statements for selected variables. It's not for everyone, but some find it a massive time-saver."
+      }
+    ]
+  },
+  {
+    "category": "General",
+    "title": "Tips for optimizing TypeScript performance in VS Code?",
+    "body": "My VS Code gets really sluggish sometimes when working with large TypeScript files or projects, especially when navigating between files or after saving. Are there any specific VS Code settings or TS configurations that can help improve performance for the language server and IntelliSense?",
+    "replies": [
+      {
+        "body": "Make sure your `tsconfig.json` correctly excludes large directories like `node_modules` from being processed by the TypeScript language server. An `exclude` array entry for `node_modules` is crucial for performance."
+      },
+      {
+        "body": "Increase the memory allocated to the TypeScript language server. In VS Code settings, search for `typescript.tsserver.maxTsServerMemory` and try setting it to a higher value like `4096` or `8192` if you have ample RAM."
+      },
+      {
+        "body": "Disable extensions that you don't actively use or that might be interfering. Some extensions can add significant overhead, especially those that hook into file changes or linting processes."
+      },
+      {
+        "body": "Ensure your VS Code and TypeScript versions are up to date. Performance improvements are often rolled out with new releases. Also, check if you're using a workspace version of TypeScript that might be outdated or misconfigured."
+      },
+      {
+        "body": "If you're using project references, make sure they are set up correctly. Incorrectly configured project references can lead to the compiler doing more work than necessary across projects."
+      },
+      {
+        "body": "Complex type inference can significantly slow down the TS server. Review your code for overly generic or deeply nested types that might be causing performance bottlenecks. Sometimes simplifying a type definition can make a huge difference."
+      },
+      {
+        "body": "Consider using the `typeAcquisition.enablement` setting to `false` in your VS Code settings if you're not relying on automatic type acquisition for JavaScript projects, as this process can sometimes be resource-intensive."
+      },
+      {
+        "body": "For debugging, you can enable `typescript.tsserver.log` in VS Code settings and set `typescript.tsserver.trace` to `verbose`. This will generate logs that can help identify what the TS server is spending its time on."
+      }
+    ]
+  },
+  {
+    "category": "General",
+    "title": "Using VS Code's Source Control effectively with Git",
+    "body": "I mostly use the terminal for Git, but I'm trying to make more use of VS Code's integrated Source Control view. What are some lesser-known or highly effective ways you use it to streamline your Git workflow? Any specific features that save you a lot of time?",
+    "replies": [
+      {
+        "body": "Staging specific lines or 'hunks' within a file directly from the diff view is a massive time-saver. You can click the `+` icon next to a line or block of changes to stage only those parts, allowing for very granular commits without ever touching `git add -p`."
+      },
+      {
+        "body": "The ability to easily revert individual changes in the diff viewer (the `undo` icon) without having to manually undo or cherry-pick is incredibly useful when you've made a mistake or want to exclude a change from a commit."
+      },
+      {
+        "body": "While GitLens provides a more powerful blame view, the native source control can show you inline blame annotations by default (if enabled). It's a quick way to see who last touched a line of code."
+      },
+      {
+        "body": "Comparing branches visually: You can click the branch name in the status bar, then select 'Compare with...' and choose another branch. This instantly shows you all divergent files and allows you to diff them directly in the editor."
+      },
+      {
+        "body": "The '...' menu in the Source Control panel has quick access to common Git commands like 'Stash', 'Pull (Rebase)', 'Fetch (Prune)', 'Publish Branch'. It's a good way to discover features you might normally use the terminal for."
+      },
+      {
+        "body": "Resolving merge conflicts in VS Code's dedicated 3-way merge editor is far superior to trying to parse conflict markers in the raw file. It visually separates current, incoming, and common ancestors, making resolution much clearer."
+      },
+      {
+        "body": "The timeline view (accessible from the file explorer, right-click a file > 'Open Timeline') gives you a chronological list of all Git commits affecting that specific file, with options to compare versions. It's excellent for understanding a file's evolution."
+      }
+    ]
+  }
+]

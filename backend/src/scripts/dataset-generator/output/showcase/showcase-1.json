@@ -1,0 +1,157 @@
+[
+  {
+    "category": "Showcase",
+    "title": "My first full-stack portfolio website!",
+    "body": "After months of work, I finally deployed my portfolio website. It showcases my projects in web development, data science, and a bit of UI/UX. I used React for the frontend, Node.js for a simple backend API, and deployed it on Vercel. I'd love to get some feedback on the design, responsiveness, and overall user experience. Let me know what you think!",
+    "replies": [
+      {
+        "body": "Looks really slick! The dark theme is clean and professional. I especially like the project detail pages."
+      },
+      {
+        "body": "Great job! The animations are subtle but add a nice touch. One small thing: on mobile, the navigation bar seems to overlap content on some pages. Check that out!"
+      },
+      {
+        "body": "This is fantastic for a first portfolio! Your code structure must be solid to pull this off. Can you share any insights into your backend implementation?"
+      },
+      {
+        "body": "Very impressive! The case studies for your projects are well-written and give good context. This definitely stands out."
+      },
+      {
+        "body": "I agree with the mobile nav comment, but otherwise, this is top-notch. The loading times are also super fast, good optimization!"
+      },
+      {
+        "body": "Seriously, this is amazing. Did you use any specific UI library or is it all custom CSS? The design system is very consistent."
+      },
+      {
+        "body": "Awesome work! Your skills really shine through. Bookmarking this for inspiration."
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Seeking feedback on my updated data science resume",
+    "body": "I've been applying for junior data scientist roles and decided to give my resume a complete overhaul. I focused on quantifiable achievements and relevant skills. I've attached a link to a PDF version. Any constructive criticism on formatting, content, or anything else would be greatly appreciated!",
+    "replies": [
+      {
+        "body": "Looks much cleaner than typical resumes. The two-column layout works well without feeling cramped. Good use of bullet points."
+      },
+      {
+        "body": "Quantifiable achievements are great! Maybe add a brief 'Summary' or 'About Me' section at the top to quickly grab attention?"
+      },
+      {
+        "body": "I'd suggest moving your 'Skills' section higher, perhaps right after a summary. Recruiters often scan for keywords there first."
+      },
+      {
+        "body": "The project descriptions are strong. For one project, did you consider adding a link to a GitHub repo or a live demo? It adds great credibility."
+      },
+      {
+        "body": "Overall very good. Check for any minor typos or grammatical errors – always good to have a fresh pair of eyes."
+      },
+      {
+        "body": "Solid resume! Your experience is well-articulated. Good luck with your applications!"
+      },
+      {
+        "body": "One point: ensure the font is readable across different devices/printers. Sometimes custom fonts can cause issues."
+      },
+      {
+        "body": "This is a significant improvement. The focus on results makes it very impactful."
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "My graphic design portfolio website for creative roles",
+    "body": "Hi everyone! I'm a graphic designer specializing in branding and print. I've just launched my new portfolio website and would love some fresh perspectives. I aimed for a clean, minimalist design to let my work speak for itself. What are your first impressions? Is it easy to navigate? Does it convey professionalism?",
+    "replies": [
+      {
+        "body": "The minimalist approach definitely works here. Your work truly shines through. Great choice of colors too!"
+      },
+      {
+        "body": "Very professional and elegant. Navigation is intuitive. The loading speed is excellent, which is crucial for image-heavy sites."
+      },
+      {
+        "body": "Fantastic work! The case studies for your branding projects are particularly strong. They really demonstrate your process."
+      },
+      {
+        "body": "I love the subtle hover effects on the project thumbnails. It adds a nice interactive touch without being distracting."
+      },
+      {
+        "body": "Perhaps consider adding a small 'About Me' section or a photo to personalize it a bit more? Just a thought, it's great as is."
+      },
+      {
+        "body": "The 'Contact' page is simple and effective. A strong call to action without being pushy."
+      },
+      {
+        "body": "Really impressed with the quality of your portfolio pieces. This website does them justice."
+      },
+      {
+        "body": "One of the better graphic design portfolios I've seen recently. Clean, focused, and highlights your strengths."
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Built a personal blog to document my coding journey – check it out!",
+    "body": "I've always wanted a space to share what I'm learning in web development, so I finally built a personal blog. It's a simple static site generated with Gatsby, hosted on Netlify. I've written a few posts about React hooks and CSS grid. I'm keen to hear if the design is appealing and if the content is clear/helpful. All feedback welcome!",
+    "replies": [
+      {
+        "body": "Awesome initiative! The design is clean and very readable. Perfect for a blog."
+      },
+      {
+        "body": "Gatsby and Netlify is a solid combo. The performance is noticeable. Your posts are well-structured and easy to follow."
+      },
+      {
+        "body": "I like the typography you've chosen; it contributes to the overall clarity. Maybe add a search function for posts as you get more content?"
+      },
+      {
+        "body": "Great start to documenting your journey! The React hooks post was particularly insightful. Keep them coming!"
+      },
+      {
+        "body": "The color scheme is pleasant and not distracting. On mobile, the header feels a bit large, but that's a minor point."
+      },
+      {
+        "body": "This is a great way to showcase your understanding and commitment. Very professional for a personal blog."
+      },
+      {
+        "body": "Consider adding a 'related posts' section at the end of each article to keep readers engaged."
+      },
+      {
+        "body": "Fantastic work! Sharing your knowledge is a powerful way to learn even more."
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "My UX/UI design portfolio – looking for critique on user flow and presentation",
+    "body": "Hello community! I've been working on my UX/UI design portfolio and just updated it with a few new case studies. My main goal was to clearly articulate my design process and the impact of my solutions. I'm particularly interested in feedback on how well the user flow is presented within each case study and the overall aesthetic appeal of the site. Any thoughts?",
+    "replies": [
+      {
+        "body": "The presentation of your case studies is excellent! The problem, solution, and outcome are very clear."
+      },
+      {
+        "body": "I like the way you've integrated wireframes and prototypes into your explanations. It really helps to visualize your process."
+      },
+      {
+        "body": "Aesthetic appeal is spot on – modern, clean, and allows your work to be the focus. Very well done."
+      },
+      {
+        "body": "The site is responsive and performs well. Perhaps for future case studies, consider adding some user testing insights or A/B testing results if available?"
+      },
+      {
+        "body": "Your user flow diagrams are very easy to understand. That's a strong point for a UX portfolio."
+      },
+      {
+        "body": "Great job highlighting the 'impact' section. That's what employers want to see."
+      },
+      {
+        "body": "I agree, the clarity in explaining your design decisions is a major strength. Keep up the excellent work!"
+      },
+      {
+        "body": "One minor suggestion: ensure all image captions are consistent in style. Otherwise, a top-tier portfolio!"
+      },
+      {
+        "body": "This is truly an inspiring portfolio. Very thorough and thoughtfully put together."
+      }
+    ]
+  }
+]

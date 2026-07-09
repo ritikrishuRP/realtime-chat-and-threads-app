@@ -1,0 +1,160 @@
+[
+  {
+    "category": "Showcase",
+    "title": "Built a fully functional e-commerce store with integrated Stripe payments!",
+    "body": "Excited to share my latest project: a complete e-commerce platform built from scratch. It features product listings, shopping cart functionality, user authentication, and secure checkout powered by Stripe. Frontend is React with Next.js for SSR, backend is Node.js with Express, and MongoDB for the database. I'm particularly proud of the responsive design and the webhook handling for payment statuses. Happy to answer any questions!",
+    "replies": [
+      {
+        "body": "Looks awesome! What was your biggest challenge integrating Stripe's API, especially with webhooks?"
+      },
+      {
+        "body": "This is great! Did you consider using a headless CMS for product management or did you build that functionality into your Node.js backend?"
+      },
+      {
+        "body": "How did you handle inventory management? Is it real-time or updated after successful payments?"
+      },
+      {
+        "body": "Very clean UI! Did you use a specific component library or build everything custom with CSS modules?"
+      },
+      {
+        "body": "For shipping, are you integrating with a third-party service like Shippo, or is that handled manually for now?"
+      },
+      {
+        "body": "Any plans to add features like customer reviews or a wish list? These often drive engagement."
+      },
+      {
+        "body": "How did you approach error handling for failed payments or network issues during the checkout process?"
+      },
+      {
+        "body": "I'm curious about the hosting setup for this. Vercel for Next.js and then a separate server for Node.js/MongoDB?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "My custom analytics dashboard for tracking subscription payments and churn",
+    "body": "Just finished building a custom dashboard to visualize our subscription data. It pulls data from Stripe via webhooks and API, processes it with a Python script, and then displays key metrics like MRR, churn rate, new subscribers, and payment success rates using React and Chart.js. It's been incredibly useful for understanding our customer base better. The backend uses a PostgreSQL database for historical data.",
+    "replies": [
+      {
+        "body": "This sounds incredibly useful! How did you handle data aggregation for historical trends, especially with daily/weekly snapshots?"
+      },
+      {
+        "body": "Are you using any specific libraries or patterns in React to keep the dashboard performant with a lot of data points?"
+      },
+      {
+        "body": "What was the most challenging metric to accurately calculate or display in a meaningful way?"
+      },
+      {
+        "body": "Did you implement any real-time updates for new subscriptions or failed payments, or is it a scheduled refresh?"
+      },
+      {
+        "body": "How are you ensuring data privacy and security, especially since you're dealing with sensitive payment-related data?"
+      },
+      {
+        "body": "I'm looking to build something similar. What's your advice on choosing between server-side rendering or client-side rendering for a dashboard like this?"
+      },
+      {
+        "body": "Any plans to add predictive analytics, like forecasting future MRR based on current trends?"
+      },
+      {
+        "body": "Did you run into any rate limiting issues with the Stripe API when pulling large datasets?"
+      },
+      {
+        "body": "How do you handle different user roles or permissions if multiple team members access this dashboard?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Implemented a secure donation system with PayPal and Stripe using webhooks",
+    "body": "Happy to share a project where I built a robust donation system for a non-profit. It accepts payments via both PayPal and Stripe, with full webhook integration for real-time status updates and reconciliation. The system handles one-time and recurring donations, sends automated receipts, and has an admin panel to view donation history. Tech stack: Laravel (PHP) for backend, Vue.js for frontend, MySQL database.",
+    "replies": [
+      {
+        "body": "Great work! What were the main differences or challenges you encountered when integrating Stripe vs. PayPal, especially with recurring payments?"
+      },
+      {
+        "body": "Did you consider any other payment gateways, or were these two chosen specifically for their widespread adoption?"
+      },
+      {
+        "body": "How did you manage to keep the admin panel secure and prevent unauthorized access to sensitive donation data?"
+      },
+      {
+        "body": "For the automated receipts, are you using a third-party service like SendGrid, or a custom email solution?"
+      },
+      {
+        "body": "What strategies did you use for handling failed recurring payments (dunning management)? Does your system retry payments?"
+      },
+      {
+        "body": "Could you elaborate on the reconciliation process? How do you ensure all donations are correctly accounted for?"
+      },
+      {
+        "body": "Any features like gift aid or specific tax receipt generation planned for the future?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Built a multi-vendor e-commerce platform's admin dashboard",
+    "body": "I've been working on the admin dashboard for a new multi-vendor e-commerce platform. This dashboard allows vendors to manage their products, orders, and sales reports. It also has a super-admin view for platform-wide analytics, user management, and dispute resolution. It's built with Angular for the frontend and a Django REST Framework backend. Authentication is handled with JWTs.",
+    "replies": [
+      {
+        "body": "This sounds like a huge project! How did you manage the complexity of different user roles (vendor vs. super-admin) and their respective permissions?"
+      },
+      {
+        "body": "For reporting, are you generating static reports or offering dynamic filtering and custom report creation options?"
+      },
+      {
+        "body": "What's your approach to ensuring data consistency across multiple vendors and potentially many concurrent updates?"
+      },
+      {
+        "body": "Did you consider using GraphQL for the API to simplify data fetching for such a complex dashboard?"
+      },
+      {
+        "body": "How are you handling image uploads for products? Direct to S3 or through your Django backend?"
+      },
+      {
+        "body": "Any plans for integrating an internal messaging system for vendors and customers/platform support?"
+      },
+      {
+        "body": "What was the most challenging UI/UX problem you faced when designing for both vendor and super-admin workflows?"
+      },
+      {
+        "body": "How did you manage to scale the backend to handle potentially thousands of vendors and millions of products?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "My React Native app integrating Apple Pay and Google Pay with Stripe",
+    "body": "Proud to share a React Native application I developed that seamlessly integrates Apple Pay and Google Pay for a smooth checkout experience. It uses the Stripe React Native SDK and handles both one-time payments and saving payment methods for future use. The backend is a simple serverless function (AWS Lambda) that interacts with the Stripe API to confirm payments. Focus was on security and user convenience.",
+    "replies": [
+      {
+        "body": "Looks fantastic! How did you handle the native UI components for Apple Pay and Google Pay in React Native? Was it straightforward with the Stripe SDK?"
+      },
+      {
+        "body": "What was your approach to testing the payment flows across different devices and OS versions?"
+      },
+      {
+        "body": "Did you encounter any specific challenges related to PCI compliance when dealing with mobile payments?"
+      },
+      {
+        "body": "How does your serverless function handle idempotency for payment confirmations to prevent duplicate charges?"
+      },
+      {
+        "body": "Are you using Payment Intents or Charges API for these transactions, and why did you choose that particular method?"
+      },
+      {
+        "body": "Any plans to integrate other mobile wallet options or local payment methods specific to certain regions?"
+      },
+      {
+        "body": "What's your strategy for handling network connectivity issues during the payment process on a mobile device?"
+      },
+      {
+        "body": "Could you share insights on how you secure the communication between the React Native app, your serverless function, and Stripe?"
+      },
+      {
+        "body": "How did you manage the different environment configurations (test/production) for Stripe keys in a React Native app?"
+      }
+    ]
+  }
+]

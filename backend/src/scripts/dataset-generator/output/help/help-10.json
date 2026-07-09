@@ -1,0 +1,160 @@
+[
+  {
+    "category": "Help",
+    "title": "TypeScript Error: Property 'value' does not exist on type 'A | B'",
+    "body": "I have a union type `A | B` where `A` has a `value` property and `B` does not. When I try to check `if (item.type === 'A')` and then access `item.value`, TypeScript still complains that `value` might not exist. I thought type guards would narrow the type. What am I missing?",
+    "replies": [
+      {
+        "body": "You're likely running into issues with how TypeScript infers types within conditional blocks. Make sure your `type` property is a literal string type, e.g., `type: 'A'` not just `type: string`."
+      },
+      {
+        "body": "Yes, exactly! If `type` is just `string`, TypeScript doesn't know 'A' is a specific discriminator. It needs to be a string literal type. Define your types like: `interface A { type: 'A'; value: string; }` and `interface B { type: 'B'; name: string; }`."
+      },
+      {
+        "body": "Can you share your exact type definitions for A and B? Sometimes people forget to include the discriminator property in the union itself, or they make it a generic string instead of a literal."
+      },
+      {
+        "body": "Also, ensure you're not reassigning `item` within the `if` block or in a closure, as that could cause the type narrowing to be lost. A common mistake."
+      },
+      {
+        "body": "Another thing to check is if you're using `const` or `let` for `item`. If `item` is `let` and could be reassigned, the type guard might not persist as expected in more complex scenarios, though for a simple `if` it should be fine."
+      },
+      {
+        "body": "Make sure your `tsconfig.json` isn't set to an older TS version that might have different type narrowing behaviors. Generally, for this kind of discriminated union, it should work out of the box with modern TS."
+      },
+      {
+        "body": "If you're still stuck, a minimal reproducible example on TypeScript Playground would be super helpful to diagnose the exact problem."
+      },
+      {
+        "body": "Could it be related to strict null checks or strict property initialization? Though usually, those manifest as different errors. Still worth a quick check in your `tsconfig`."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Struggling with generic types in a custom React hook: 'Type argument not assignable'",
+    "body": "I'm trying to create a generic `useFetch` hook in React that can handle different response types. I have `function useFetch<T>(url: string): { data: T | null; loading: boolean; error: Error | null }`. When I call it like `const { data } = useFetch<MyData>('/api/data')`, I get a TypeScript error: 'Type argument for type parameter 'T' cannot be inferred' or 'Type 'unknown' is not assignable to type 'MyData''. How do I correctly define and use generics here?",
+    "replies": [
+      {
+        "body": "The error 'Type argument for type parameter 'T' cannot be inferred' usually means that TypeScript expects you to explicitly provide the type argument, which you are doing with `useFetch<MyData>`. The second error 'Type 'unknown' is not assignable to type 'MyData'' suggests that your fetch logic might be returning `unknown` or `any` before casting it to `T`."
+      },
+      {
+        "body": "You need to explicitly cast the JSON response within your `useFetch` hook. After `response.json()`, you'll likely get `any` or `unknown`. You should do something like `const result: T = await response.json();` or `const result = await response.json() as T;`."
+      },
+      {
+        "body": "Yes, `response.json()` by default returns `any` in many environments (or `Promise<any>`). TypeScript can't magically infer `T` from the API endpoint. You *must* assert or cast the received data to `T`."
+      },
+      {
+        "body": "Consider adding an optional parser function as a parameter to your hook, e.g., `useFetch<T>(url: string, parser?: (json: any) => T)`. This gives you more control over deserialization and type safety."
+      },
+      {
+        "body": "Another common pitfall is if you're initializing `data` within the hook as `null` and then later assigning it. TypeScript might struggle if the initial type of `data` is `null` and you're trying to assign `T` to it without proper union handling (`T | null`). Ensure your `useState` is `useState<T | null>(null)`."
+      },
+      {
+        "body": "Make sure your fetch implementation correctly handles the promise resolution. A common pattern is `fetch(...).then(res => res.json()).then(data => setData(data as T)).catch(...)`."
+      },
+      {
+        "body": "If you're using `async/await`, it would look like: `const response = await fetch(url); const json = await response.json(); setData(json as T);` This `as T` is crucial for the hook's internal typing."
+      },
+      {
+        "body": "You could also add a type guard to validate the incoming data at runtime, especially if `T` is complex. This is good practice for data coming from external sources, even with TypeScript."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "TypeScript complains about 'Element implicitly has an 'any' type' when accessing object with string key",
+    "body": "I have an object `myObject` and I'm trying to access its properties dynamically using a string variable, like `myObject[key]`. TypeScript gives me the error 'Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ a: string; b: number; }'. How do I properly type this so TypeScript knows `key` is a valid index?",
+    "replies": [
+      {
+        "body": "This error means TypeScript doesn't know that `key` is actually one of the valid keys of `myObject`. You need to tell TypeScript that `key` is a `keyof typeof myObject`."
+      },
+      {
+        "body": "If `myObject` is something like `const myObject = { a: 'hello', b: 123 };`, then `key` should be typed as `keyof typeof myObject`. For example, `function getValue(key: keyof typeof myObject) { return myObject[key]; }`."
+      },
+      {
+        "body": "Alternatively, if `key` is coming from an external source (like user input or an API), you might need a runtime check to ensure it's a valid key before accessing. For instance, `if (key in myObject)`."
+      },
+      {
+        "body": "You can use a type assertion, but be careful as this bypasses type safety: `myObject[key as keyof typeof myObject]`. Only do this if you are absolutely certain `key` will be valid."
+      },
+      {
+        "body": "If `myObject` has a fixed structure, defining an interface or type for it and then using `keyof MyObjectType` is the most robust solution."
+      },
+      {
+        "body": "What exactly is `key`? Is it a variable you control, or is it coming from somewhere else? The solution depends on the source of `key`."
+      },
+      {
+        "body": "If you are iterating over keys, use `Object.keys(myObject) as Array<keyof typeof myObject>`. This cast is safe because `Object.keys` returns string array, but you know they are valid keys."
+      },
+      {
+        "body": "For situations where the key might truly be any string, and you want to allow it, you can add an index signature to your type: `interface MyType { [key: string]: any; a: string; b: number; }`. But this weakens type safety considerably."
+      },
+      {
+        "body": "The `noImplicitAny` compiler option (which is usually on in strict mode) is what triggers this error. It's a good error to have as it forces you to be explicit about types."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "TypeScript complains: 'Property 'status' does not exist on type 'ErrorTypeA | ErrorTypeB'' with discriminated unions",
+    "body": "I have two error types, `ErrorTypeA` and `ErrorTypeB`, which are part of a discriminated union. `ErrorTypeA` has a `status` property, while `ErrorTypeB` has a `code` property. When I try to check `if (error.type === 'A')` and then access `error.status`, TypeScript still gives me 'Property 'status' does not exist on type 'ErrorTypeA | ErrorTypeB''. My types are defined like `type Error = ErrorTypeA | ErrorTypeB`. What's wrong?",
+    "replies": [
+      {
+        "body": "This is almost identical to the issue of `value` not existing on a union. Make sure `type` in both `ErrorTypeA` and `ErrorTypeB` are string literal types. E.g., `interface ErrorTypeA { type: 'A'; status: number; message: string; }` and `interface ErrorTypeB { type: 'B'; code: string; details: string; }`."
+      },
+      {
+        "body": "If `error.type` is of type `string` (instead of `'A' | 'B'`), TypeScript can't use it as a discriminator. Explicitly define the `type` property in each interface with its literal string value."
+      },
+      {
+        "body": "A common mistake is that the `type` property might not be present on *all* members of the union, or it's not a literal string. If one member of the union doesn't have the discriminator, the union isn't truly 'discriminated' for TypeScript's purposes."
+      },
+      {
+        "body": "Double-check your `if` condition. Are you sure you're checking `error.type` and not some other property? A typo there would lead to this exact error."
+      },
+      {
+        "body": "Ensure the variable `error` itself is correctly typed as the union `ErrorTypeA | ErrorTypeB` and not just `any` or some broader `object` type."
+      },
+      {
+        "body": "If you're using `switch (error.type)` statements, those also work perfectly for narrowing discriminated unions, perhaps making the logic clearer."
+      },
+      {
+        "body": "It's also possible that the variable `error` is being re-assigned within the scope after the `if` check, invalidating the type narrowing. But for a simple `if` block, this is less likely."
+      },
+      {
+        "body": "Can you post the exact definitions of `ErrorTypeA` and `ErrorTypeB`? That will help clarify if the discriminator is set up correctly."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "TypeScript Error: 'Type 'Partial<MyType>' is not assignable to type 'MyType'' when updating an object",
+    "body": "I have an interface `MyType` and I'm trying to create a function that takes `Partial<MyType>` to update an existing object of `MyType`. However, when I try to assign the `Partial<MyType>` object back to a `MyType` variable (or merge it), TypeScript throws 'Type 'Partial<MyType>' is not assignable to type 'MyType''. How do I correctly update `MyType` objects with partial data without errors?",
+    "replies": [
+      {
+        "body": "This error is expected because `Partial<MyType>` means all properties are optional. `MyType` means all required properties must be present. You can't assign an object with potentially missing required properties to a type that requires them all."
+      },
+      {
+        "body": "You need to create a new object that combines the existing `MyType` object with the `Partial<MyType>` updates. The spread operator (`{ ...existingObject, ...updates }`) is your friend here."
+      },
+      {
+        "body": "The merge operation should produce a `MyType`. So, if `existingObject` is `MyType` and `updates` is `Partial<MyType>`, then `const updatedObject: MyType = { ...existingObject, ...updates };` should work."
+      },
+      {
+        "body": "If you are directly modifying `existingObject`, TypeScript won't know that the modifications result in a valid `MyType`. You need to ensure all required properties are present after the update."
+      },
+      {
+        "body": "If `MyType` has optional properties and required properties, `Partial<MyType>` makes everything optional. When you merge, if `updates` contains `undefined` for a required property, that would also cause issues if not properly handled by the merge logic."
+      },
+      {
+        "body": "Consider using `Object.assign` if you prefer that over the spread syntax, but the principle is the same: `const updatedObject = Object.assign({}, existingObject, updates) as MyType;` – though the `as MyType` might be needed if `Object.assign`'s return type isn't fully inferred."
+      },
+      {
+        "body": "The error is a good thing! It's preventing you from having an object that claims to be a `MyType` but might be missing crucial data. Always create a new object or ensure the existing one is fully compliant after updates."
+      },
+      {
+        "body": "If you are working with state in React, you always create a new object to update the state anyway. This pattern aligns perfectly with that requirement."
+      }
+    ]
+  }
+]

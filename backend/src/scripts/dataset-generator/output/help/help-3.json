@@ -1,0 +1,163 @@
+[
+  {
+    "category": "Help",
+    "title": "PostgreSQL connection issues after upgrade to v14 on Ubuntu",
+    "body": "Hi everyone, I recently upgraded my PostgreSQL server from version 12 to 14 on Ubuntu 20.04. Now, my application (a Java Spring Boot app) cannot connect to the database. I'm getting 'authentication failed for user \"myuser\"' or sometimes 'no pg_hba.conf entry for host \"192.168.1.10\"'. I've tried reinstalling drivers and restarting the app, but no luck. Any ideas?",
+    "replies": [
+      {
+        "body": "This is a classic issue after an upgrade. Your `pg_hba.conf` might not have been migrated correctly or the new default authentication method might be stricter. Check the `pg_hba.conf` file for your PostgreSQL 14 instance, it's usually in `/etc/postgresql/14/main/pg_hba.conf`."
+      },
+      {
+        "body": "Also, make sure the `listen_addresses` in `postgresql.conf` allows connections from your application's IP. It defaults to `localhost` in many installations, so if your app is on a different server, you'll need to change it to `'*'` or the specific IP."
+      },
+      {
+        "body": "After modifying `pg_hba.conf` or `postgresql.conf`, did you remember to restart the PostgreSQL service? A simple `sudo systemctl restart postgresql@14-main` should do it."
+      },
+      {
+        "body": "What authentication method are you using in `pg_hba.conf` for 'myuser' and the client's IP? PostgreSQL 14 defaults to `scram-sha-256`, which might not be supported by older client drivers or your current connection string. You might need to change it to `md5` or update your driver."
+      },
+      {
+        "body": "Double-check your connection string in the Spring Boot application. Ensure it's pointing to the correct port (default 5432) and host of the new PostgreSQL 14 instance. Sometimes during upgrades, old configurations can linger."
+      },
+      {
+        "body": "It's worth checking the PostgreSQL logs (`/var/log/postgresql/postgresql-14-main.log`) for more specific error messages. They often provide exact details on why a connection was rejected."
+      },
+      {
+        "body": "Try connecting directly from the server using `psql -h 127.0.0.1 -U myuser -d mydb`. If that works, it points to a network or `pg_hba.conf` issue for external connections. If not, it's likely a user or password problem."
+      },
+      {
+        "body": "If you changed `pg_hba.conf` and don't want to fully restart, you can use `sudo systemctl reload postgresql@14-main` or `pg_ctl reload`. This applies HBA changes without dropping existing connections."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Best practices for data type mapping: MySQL to PostgreSQL migration",
+    "body": "We're planning a large-scale migration from MySQL to PostgreSQL for our main application database. I'm looking for advice on best practices for data type mapping, especially for types like `TINYINT(1)`, `MEDIUMTEXT`, and `DATETIME`. Are there any common pitfalls or recommended equivalents to avoid issues down the line?",
+    "replies": [
+      {
+        "body": "For `TINYINT(1)`, the standard PostgreSQL equivalent is `BOOLEAN` if it's used for true/false values (MySQL maps 0/1). If it's for small integer values, `SMALLINT` is better."
+      },
+      {
+        "body": "`MEDIUMTEXT` and `LONGTEXT` in MySQL can generally be mapped to `TEXT` in PostgreSQL. PostgreSQL's `TEXT` type has virtually no length limit, so it covers all your text needs."
+      },
+      {
+        "body": "For `DATETIME`, `TIMESTAMP WITHOUT TIME ZONE` is the direct equivalent. If your MySQL `DATETIME` stores UTC, consider `TIMESTAMP WITH TIME ZONE` and ensure your application handles time zones correctly."
+      },
+      {
+        "body": "Be careful with `AUTO_INCREMENT` columns. PostgreSQL uses `SERIAL`, `BIGSERIAL`, or explicit sequences with `DEFAULT nextval('seq_name')`. Make sure your migration script handles this correctly to maintain sequence integrity."
+      },
+      {
+        "body": "Watch out for character sets and collations. MySQL's `utf8mb4` is essentially `UTF-8` in PostgreSQL. Ensure your database is created with `encoding 'UTF8'` and a suitable collation, e.g., `en_US.UTF-8`."
+      },
+      {
+        "body": "Another pitfall is unsigned integers. PostgreSQL doesn't have direct unsigned integer types. You'll need to use the next larger signed integer type (e.g., `BIGINT` for MySQL `INT UNSIGNED`) and enforce constraints at the application level if needed."
+      },
+      {
+        "body": "Consider using a migration tool like `pgloader`. It automates many of these mappings and can save a lot of manual effort and potential errors. It's highly configurable and robust."
+      },
+      {
+        "body": "Test, test, test! After the initial migration, thoroughly test your application with the new PostgreSQL database. Pay close attention to data integrity, query performance, and any edge cases related to data types."
+      },
+      {
+        "body": "Don't forget about spatial data types if you have any. MySQL's `GEOMETRY` types have direct equivalents in PostGIS, which is the de facto standard for spatial data in PostgreSQL."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "PostgreSQL queries much slower after migrating large dataset",
+    "body": "We recently migrated about 50 million rows from an old SQL Server database to a new PostgreSQL instance. The migration itself went smoothly, but now many of our queries are significantly slower on PostgreSQL. Simple selects take seconds, where they were milliseconds before. What should I be looking at to troubleshoot this performance drop? The hardware specs are comparable.",
+    "replies": [
+      {
+        "body": "The first thing to check after a large data import is if you've run `ANALYZE` on your tables. PostgreSQL's query planner relies heavily on statistics. Without up-to-date stats, it might be choosing inefficient plans. `VACUUM ANALYZE VERBOSE your_table;` or `VACUUM ANALYZE VERBOSE;` for the whole database."
+      },
+      {
+        "body": "Are your indexes in place? If you migrated data and then created indexes, that's good. If you created indexes on empty tables and then inserted data, they might be fragmented. A `REINDEX` might help, but often `VACUUM FULL` or a dump/restore is better after a bulk load for very fragmented indexes."
+      },
+      {
+        "body": "Use `EXPLAIN ANALYZE` on your slowest queries. This will show you the actual execution plan and how much time is spent on each step. It's the most crucial tool for diagnosing query performance."
+      },
+      {
+        "body": "Check your PostgreSQL configuration, specifically `shared_buffers`, `work_mem`, and `maintenance_work_mem`. These settings significantly impact performance, especially for large datasets and operations like indexing or sorting."
+      },
+      {
+        "body": "Verify that `autovacuum` is running and configured appropriately. If it's not aggressive enough, dead tuples can accumulate, leading to bloat and slower scans."
+      },
+      {
+        "body": "Is your application fetching more data than necessary? Sometimes, ORMs can generate queries that retrieve too many columns or entire related objects, which might have been masked by a very fast SQL Server instance."
+      },
+      {
+        "body": "What kind of storage is your PostgreSQL instance using? If it's on slower storage (e.g., HDD instead of SSD), that could be a major bottleneck for large datasets, especially if your working set doesn't fit in `shared_buffers`."
+      },
+      {
+        "body": "Look for sequential scans on large tables where you'd expect index scans. This indicates missing indexes or ineffective indexes (due to poor statistics or highly skewed data)."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Optimizing PostgreSQL connection pooling for a high-traffic Node.js app",
+    "body": "Our Node.js application is experiencing 'too many connections' errors and general slowness under heavy load when interacting with PostgreSQL. We're currently using a basic connection pool within our ORM (Sequelize). What are the best practices for managing PostgreSQL connections in a high-traffic environment? Should we be looking at external tools?",
+    "replies": [
+      {
+        "body": "First, ensure your `max_connections` in `postgresql.conf` is set high enough to accommodate your pooled connections plus some overhead. Don't set it excessively high, as each connection consumes memory."
+      },
+      {
+        "body": "If you're using Sequelize, make sure its connection pool settings are tuned. Look at `max`, `min`, `acquire`, `idle` parameters. `max` should align with your expected concurrency and `max_connections`."
+      },
+      {
+        "body": "For high-traffic Node.js apps, a dedicated connection pooler like PgBouncer is highly recommended. It sits between your application and PostgreSQL, managing connections more efficiently and reducing the overhead on the database server."
+      },
+      {
+        "body": "PgBouncer can operate in different modes: `session`, `transaction`, and `statement`. For most web applications, `transaction` pooling offers the best balance, as it releases connections back to the pool at the end of each transaction, maximizing reuse."
+      },
+      {
+        "body": "Check for any long-running queries in your application. A few slow queries holding onto connections can quickly deplete your pool. Implement `statement_timeout` in PostgreSQL or within your ORM to prevent this."
+      },
+      {
+        "body": "Monitor your active connections on the PostgreSQL side. Use `SELECT count(*) FROM pg_stat_activity;` to see how many connections are actually active. This can help you determine if the problem is too many connections or connections being held for too long."
+      },
+      {
+        "body": "Make sure your application code isn't explicitly opening new connections without closing them or that your ORM isn't misconfigured in a way that bypasses the pool for certain operations."
+      },
+      {
+        "body": "Consider using `SET application_name` in your connection string. This helps identify connections from specific parts of your application in `pg_stat_activity`, aiding debugging."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Troubleshooting PostgreSQL Logical Replication subscription failing",
+    "body": "I'm trying to set up logical replication between two PostgreSQL 13 instances (publisher and subscriber) on separate VMs. The publication is created, and the subscription is active, but no data is syncing. I'm seeing errors like 'could not receive data from WAL stream' or sometimes 'replication slot \"myslot\" does not exist' in the subscriber logs. What am I missing?",
+    "replies": [
+      {
+        "body": "First, verify that `wal_level` is set to `logical` on your publisher server's `postgresql.conf`. This is crucial for logical replication. After changing, a full PostgreSQL restart is required."
+      },
+      {
+        "body": "Check your `pg_hba.conf` on the publisher. You need an entry allowing the subscriber's IP to connect for replication. Something like `host replication all <subscriber_ip>/32 scram-sha-256`."
+      },
+      {
+        "body": "Confirm the publication on the publisher actually includes the tables you want to replicate. You can check with `SELECT * FROM pg_publication_tables;`."
+      },
+      {
+        "body": "Does the replication slot `myslot` actually exist on the publisher? Run `SELECT * FROM pg_replication_slots;` on the publisher. If it's not there, the subscriber couldn't create it, often due to permission or connectivity issues."
+      },
+      {
+        "body": "Check the publisher's PostgreSQL logs for any errors related to replication. The 'could not receive data from WAL stream' often indicates a problem on the publisher's side preventing it from sending data, or a network issue."
+      },
+      {
+        "body": "Ensure the user configured for the subscription on the subscriber has `REPLICATION` privilege on the publisher. Also, it needs `SELECT` privileges on the tables being replicated."
+      },
+      {
+        "body": "Are there primary keys on the tables you are trying to replicate? While not strictly required for all logical replication, it's highly recommended and can sometimes cause issues or warnings if missing, especially for `UPDATE` and `DELETE` operations."
+      },
+      {
+        "body": "Verify network connectivity between the subscriber and publisher on the PostgreSQL port (default 5432). Firewalls are a common culprit for 'could not receive data' type errors."
+      },
+      {
+        "body": "If the publisher was recently restarted or crashed, sometimes replication slots can become 'stale'. You might need to drop and recreate the subscription, which will also recreate the slot."
+      }
+    ]
+  }
+]

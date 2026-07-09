@@ -1,0 +1,160 @@
+[
+  {
+    "category": "Q&A",
+    "title": "Best practices for securing JWTs in a SPA with Clerk",
+    "body": "I'm building a Single Page Application (SPA) using React and a Node.js backend, and I'm integrating Clerk for authentication. I'm using JWTs for session management. What are the current best practices for securely storing and transmitting JWTs to prevent XSS/CSRF attacks? Should I use httpOnly cookies, local storage, or something else entirely? Clerk handles a lot, but I want to make sure my custom backend is also secure.",
+    "replies": [
+      {
+        "body": "Clerk itself uses `httpOnly` cookies for managing its session tokens, which is generally the most secure approach against XSS for session tokens. For your custom backend, if you're exchanging Clerk's session token for your own backend-issued JWTs, then `httpOnly` cookies are still recommended."
+      },
+      {
+        "body": "Agreed with the `httpOnly` cookies. Storing JWTs in local storage is a big no-no due to XSS vulnerabilities. Even with Clerk managing the primary session, if your backend issues its own short-lived access tokens, those should ideally be in `httpOnly` cookies too, or passed in the `Authorization` header directly from Clerk's session."
+      },
+      {
+        "body": "Just to clarify, Clerk's primary session tokens are stored in `httpOnly` cookies by design. When you interact with your backend, you're usually using the Clerk session token that gets passed, or you're exchanging it for a custom access token. If it's a custom access token, keep it short-lived and use refresh tokens."
+      },
+      {
+        "body": "For CSRF, Clerk's `httpOnly` cookies inherently provide some protection if configured with `SameSite=Lax` or `Strict`. If your SPA is making requests to your backend with credentials, ensure your backend validates the `Origin` header and implements CSRF tokens for sensitive actions."
+      },
+      {
+        "body": "What about using an in-memory variable for short-lived access tokens? You'd fetch it at app load and keep it there, then clear it on refresh. This mitigates some XSS, but still vulnerable if an attacker can inject code to read variables."
+      },
+      {
+        "body": "The in-memory approach can work for very short-lived tokens, but it becomes cumbersome for user experience as they'd have to re-authenticate on every browser refresh. Stick to `httpOnly` cookies for anything persistent, paired with refresh tokens if you need long sessions."
+      },
+      {
+        "body": "Clerk handles a lot of this magic for you. Their SDKs abstract away the complexity of secure token storage and refresh. Focus on validating the tokens on your backend correctly and configuring your custom API to use Clerk's provided session data securely."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Validating Clerk-issued JWTs on a custom backend",
+    "body": "I've successfully integrated Clerk on my frontend, and users can log in. Now I need to protect my API routes on my custom Express backend. How do I effectively validate the JWTs issued by Clerk to ensure the user is authenticated and authorized? Are there specific libraries or middleware I should be using with Clerk's ecosystem, or is it standard JWT validation?",
+    "replies": [
+      {
+        "body": "Clerk provides official SDKs for various backend frameworks, including Node.js (Express, Next.js API routes, etc.). The `clerk-sdk-node` package is what you need. It includes middleware to validate the JWT from the `Authorization` header and make user data available in your request object."
+      },
+      {
+        "body": "You'll primarily be validating the session token (JWT) that Clerk issues. The `clerk-sdk-node` will handle fetching Clerk's public keys (JWKS endpoint) to verify the signature, check expiration, and ensure the issuer is correct. It's not just standard JWT validation; it leverages Clerk's specific infrastructure."
+      },
+      {
+        "body": "Using Clerk's SDK is crucial. Don't try to roll your own JWT validation against Clerk's tokens using a generic `jsonwebtoken` library without understanding Clerk's specific token structure and JWKS endpoint. The SDK handles all that complexity."
+      },
+      {
+        "body": "For an Express app, you'd typically use middleware like `clerkExpressRequireAuth` or `clerkClient.verifyToken` if you need more granular control. This middleware will populate `req.auth` or `req.user` with the decoded token payload and user information."
+      },
+      {
+        "body": "Remember to configure your Clerk API keys (secret key) in your backend environment variables for the SDK to work correctly. The public keys are fetched automatically, but the secret key is needed for some SDK functions and for identifying your backend to Clerk."
+      },
+      {
+        "body": "Once validated by the SDK, you'll have access to the `userId` and other claims. Use `userId` to query your database for any specific user roles or permissions you might manage outside of Clerk, for authorization purposes."
+      },
+      {
+        "body": "Also, make sure your frontend sends the Clerk session token in the `Authorization: Bearer <token>` header with every protected request. The Clerk SDKs often handle setting this up for you if you're using their client-side libraries."
+      },
+      {
+        "body": "I found a great tutorial on Clerk's documentation specifically for Express. It covers setting up the middleware in detail. Highly recommend checking it out if you're stuck."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Handling JWT expiration and refresh tokens with Clerk",
+    "body": "I'm a bit confused about how JWT expiration and refresh tokens work with Clerk. Does Clerk automatically manage refresh tokens behind the scenes, or do I need to implement a separate flow on my own? If a user's session token expires, how does Clerk transparently re-authenticate them, and what's the recommended approach for my backend to handle these expiring tokens?",
+    "replies": [
+      {
+        "body": "Clerk completely handles the session lifecycle, including refresh tokens, behind the scenes. You don't need to implement a separate refresh token flow yourself. Their client-side SDKs automatically detect expired session tokens and use a secure mechanism (often a hidden iframe or background request) to refresh the session."
+      },
+      {
+        "body": "This transparency is one of Clerk's major benefits. When a user's session token expires, the client-side SDK will silently request a new one from Clerk's servers. Your application's UI won't show a logout, and the user won't notice unless there's a network issue or the long-lived session itself has expired."
+      },
+      {
+        "body": "On your backend, you should always validate the incoming JWT using Clerk's SDK (`clerkExpressRequireAuth` for example). If the token is expired, the SDK will automatically handle it. If the token is truly invalid (e.g., tampered with or from a revoked session), the middleware will throw an error, indicating unauthorized access."
+      },
+      {
+        "body": "The key is that Clerk issues short-lived JWTs (session tokens) and manages their renewal using a longer-lived refresh token stored securely (typically in an `httpOnly` cookie). Your backend should only ever deal with the current valid session token."
+      },
+      {
+        "body": "So, your backend validation logic doesn't need to explicitly check for expiration and then try to refresh. It just needs to check for validity. If the token is invalid or expired, the request should be rejected, assuming the client-side will handle the refresh and retry."
+      },
+      {
+        "body": "What if the user's main Clerk session (the long-lived one) expires? In that case, Clerk's SDK will redirect the user to a login screen or prompt for re-authentication, as there's no valid refresh token to obtain a new session token."
+      },
+      {
+        "body": "For an API call where a token has just expired and the client hasn't refreshed yet, your backend will simply return an unauthorized error. The client-side Clerk SDK should then catch this, trigger a refresh, and potentially retry the original API call with the new token. This usually happens seamlessly."
+      },
+      {
+        "body": "It's important to differentiate between a JWT expiring (which Clerk handles transparently) and a user's actual session expiring or being revoked (which requires re-authentication). Clerk's system manages this distinction effectively."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Passing custom user metadata from Clerk to JWT claims",
+    "body": "I have some custom user metadata (e.g., 'role', 'subscription_plan') stored in Clerk. I'd like to include this information directly within the JWT claims issued by Clerk so my backend can easily access it without making extra database calls. Is there a way to configure Clerk to add custom claims to the JWTs, or do I need to fetch this data separately after validation?",
+    "replies": [
+      {
+        "body": "Yes, Clerk supports 'session claims' which allow you to include custom data directly into the JWT. You can define these claims in your Clerk dashboard. Go to your instance settings, then 'JWT Templates', and you can customize the claims that get added to the session token."
+      },
+      {
+        "body": "You can use Clerk's `public_metadata` and `private_metadata` fields on the user object. Data in `public_metadata` can be directly added to JWT claims via the JWT templates in the dashboard. `private_metadata` is only accessible via server-side SDKs or webhooks."
+      },
+      {
+        "body": "The way to do it is through 'Custom JWT Templates'. You can create a new template or modify the default one. In the template, you can reference user attributes and metadata. For example, `{'role': user.publicMetadata.role}`."
+      },
+      {
+        "body": "This is super useful for authorization checks on your backend. Instead of fetching user roles from your DB on every request, you can just decode the JWT and get the role directly from the claims, making your API faster."
+      },
+      {
+        "body": "Keep in mind that if you update the `public_metadata` for a user, their existing JWTs won't automatically update. The changes will only be reflected in newly issued JWTs (e.g., upon session refresh or re-login). For immediate changes, you might need to force a session refresh or revoke the old session."
+      },
+      {
+        "body": "For sensitive data that shouldn't live in the client-side JWT, stick to `private_metadata` and fetch it server-side using Clerk's backend SDK when needed, or use webhooks to sync it to your own database."
+      },
+      {
+        "body": "I would advise against putting too much data in JWTs, as it increases their size. Only include what's absolutely necessary for immediate authorization decisions. For more extensive user profiles, a database lookup is fine."
+      },
+      {
+        "body": "Ensure your custom claims are correctly formatted in the JWT template. You can use dot notation to access nested properties within `public_metadata`."
+      },
+      {
+        "body": "Once you've set up the custom claims, your backend validation logic with `clerk-sdk-node` will automatically expose these claims in the decoded token object, typically in `req.auth.claims` or similar."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Integrating Clerk with a GraphQL API and JWTs",
+    "body": "I'm setting up a new project with a GraphQL API (Apollo Server) and I'm planning to use Clerk for authentication. How do I best integrate Clerk's JWTs with GraphQL? Should I pass the JWT in the `Authorization` header for every request, and how do I validate it within my GraphQL resolvers? Are there any specific considerations or pitfalls when combining these technologies?",
+    "replies": [
+      {
+        "body": "Yes, the standard approach is to pass the Clerk-issued JWT in the `Authorization: Bearer <token>` header with every GraphQL request from your frontend. Your Apollo Server context function is the perfect place to intercept this token."
+      },
+      {
+        "body": "In your Apollo Server's `context` function, you'll extract the token from the `Authorization` header. Then, you'll use Clerk's backend SDK (`clerk-sdk-node`) to verify and decode the JWT. The `clerkClient.verifyToken` method is ideal here."
+      },
+      {
+        "body": "Once validated, you can attach the `userId` and any other relevant user data (from the JWT claims) to your `context` object. This makes the authenticated user information available to all your resolvers."
+      },
+      {
+        "body": "Your resolvers can then access `context.userId` (or whatever you name it) to perform authorization checks. For example, `if (!context.userId) throw new AuthenticationError('Not authenticated');` at the beginning of a protected resolver."
+      },
+      {
+        "body": "A common pitfall is not handling errors from `clerkClient.verifyToken` gracefully. If the token is invalid, expired, or missing, `verifyToken` will throw. Your context function should catch this and set `userId` to null or throw an `AuthenticationError` that Apollo can handle."
+      },
+      {
+        "body": "Consider using schema directives or middleware for authorization in GraphQL. This allows you to apply authentication/authorization logic declaratively in your schema, rather than repeating `if (!context.userId)` in every resolver."
+      },
+      {
+        "body": "Make sure your frontend Clerk SDK is configured to automatically include the session token in the `Authorization` header for all requests to your GraphQL endpoint. Clerk's client-side libraries usually make this straightforward."
+      },
+      {
+        "body": "Also, remember that GraphQL queries and mutations typically use POST requests, so CSRF isn't as much of a direct concern with the `Authorization` header as it might be with cookies, but still ensure secure HTTPS and proper CORS configuration."
+      },
+      {
+        "body": "Think about how you'll handle user roles or permissions. If they're in the JWT claims, great. Otherwise, you might need to make an additional database call in your context or a base resolver to fetch more detailed permissions before proceeding."
+      }
+    ]
+  }
+]

@@ -1,0 +1,148 @@
+[
+  {
+    "category": "Showcase",
+    "title": "My Custom AI Assistant for Data Analysis",
+    "body": "Just finished building an AI assistant that integrates with my SQL database and Pandas dataframes to answer natural language queries. It uses `gpt-3.5-turbo` for understanding and generating queries, and LlamaIndex for Retrieval Augmented Generation (RAG) over my database schema and documentation. It's dramatically speeding up data exploration!",
+    "replies": [
+      {
+        "body": "This sounds amazing! How did you handle schema evolution? Do you regenerate embeddings or update documentation frequently?"
+      },
+      {
+        "body": "Awesome project! What's the latency like for more complex queries involving multiple joins or aggregations? Did you implement any query optimization before sending to SQL?"
+      },
+      {
+        "body": "Any tips for prompt engineering specifically for SQL generation? I'm struggling with edge cases like date ranges and complex subqueries."
+      },
+      {
+        "body": "Did you consider using any open-source LLMs like Llama 2 or Mixtral for this? Curious about the performance/cost trade-offs."
+      },
+      {
+        "body": "This is exactly what I've been looking to build for our internal finance data. How do you manage user authentication and data access control through the assistant?"
+      },
+      {
+        "body": "For Pandas dataframes, how do you manage the context window for large datasets? Do you sample or use a different strategy?"
+      },
+      {
+        "body": "Great work! Have you tried integrating it with visualization tools like Matplotlib or Seaborn to generate charts based on insights?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Leveraging Embeddings for Semantic Search in E-commerce",
+    "body": "Managed to boost our e-commerce search relevance by ~20% after switching from keyword search to semantic search using custom product embeddings. We're using `sentence-transformers` for generating embeddings and FAISS for similarity search. Users are finding products much faster now!",
+    "replies": [
+      {
+        "body": "Fantastic! Which specific `sentence-transformers` model did you find most effective for product descriptions and user queries?"
+      },
+      {
+        "body": "How do you handle updates for new products or changes to existing product descriptions? Do you re-index the entire FAISS database or have a more incremental approach?"
+      },
+      {
+        "body": "Did you run into any cold start problems with new products that don't have many user interactions or detailed descriptions initially?"
+      },
+      {
+        "body": "What was the biggest challenge during implementation? Was it embedding quality, indexing performance, or query latency?"
+      },
+      {
+        "body": "Any plans to add a re-ranking step after the initial semantic search to further refine results based on other factors like popularity or price?"
+      },
+      {
+        "body": "How do you handle multi-language search if your e-commerce platform supports multiple locales? Are you using multilingual embeddings?"
+      },
+      {
+        "body": "What's the performance difference you observed compared to a traditional Elasticsearch setup with BM25?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Building an LLM-powered Code Review Bot",
+    "body": "Check out our new CI/CD bot! It uses `GPT-4` to review pull requests, suggesting improvements for readability, potential bugs, and even style guide violations. It's been a game-changer for code quality and frees up developer time. Currently supports Python, JavaScript, and TypeScript.",
+    "replies": [
+      {
+        "body": "This is super cool! How do you minimize hallucinations, especially for more obscure libraries or complex architectural patterns?"
+      },
+      {
+        "body": "What's the cost per review like with GPT-4? And how do you manage the context window for large pull requests with many file changes?"
+      },
+      {
+        "body": "Did you fine-tune the LLM on your codebase's style guide and best practices, or is it mostly clever prompt engineering?"
+      },
+      {
+        "body": "Any specific examples of false positives or unhelpful suggestions you had to mitigate? And what's your feedback loop for improving its suggestions?"
+      },
+      {
+        "body": "Can it handle refactoring PRs where a lot of code is moved around, or does it focus more on line-by-line changes?"
+      },
+      {
+        "body": "Is this project open source or something you're planning to productize? Would love to integrate something like this."
+      },
+      {
+        "body": "How do you prioritize suggestions? Are critical errors flagged differently than stylistic recommendations?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Interactive Storyteller using a Fine-tuned LLM",
+    "body": "Proud to share my interactive storytelling project! I fine-tuned `Llama 2 7B` on a custom dataset of fantasy novels to generate dynamic narratives based on user choices. Each choice branches the story in unique ways, creating a truly personalized experience. It's been a fun dive into creative LLM applications!",
+    "replies": [
+      {
+        "body": "This sounds amazing! What kind of dataset did you curate for fine-tuning, and how large was it?"
+      },
+      {
+        "body": "How long did the fine-tuning take, and what kind of hardware did you use? Did you leverage any cloud services for this?"
+      },
+      {
+        "body": "Did you use a specific framework like Hugging Face `transformers` or something custom for the fine-tuning process?"
+      },
+      {
+        "body": "How do you ensure story coherence and prevent the narrative from drifting too far off track over long interactions and many choices?"
+      },
+      {
+        "body": "This could be huge for game development or educational tools! Are you planning to add more genres or allow users to submit their own starting premises?"
+      },
+      {
+        "body": "Did you encounter any issues with repetitive outputs or common LLM pitfalls during generation, and how did you address them?"
+      },
+      {
+        "body": "What's the token limit for a single 'turn' in the story, and how do you manage the accumulated story context?"
+      },
+      {
+        "body": "Super creative use of LLMs! Any plans to open-source the fine-tuned model or share the code?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Real-time Chatbot with RAG and Vector DB",
+    "body": "Just launched our new customer support chatbot. It uses Retrieval Augmented Generation (RAG) with `Cohere Embed` for document embeddings and `Weaviate` as our vector database. It can answer complex questions from our extensive knowledge base in real-time, significantly reducing support ticket volume. Very happy with the results!",
+    "replies": [
+      {
+        "body": "Excellent work! How do you keep the knowledge base up-to-date, especially for rapidly changing information? Is there an automated pipeline?"
+      },
+      {
+        "body": "What's your chunking strategy for the documents in your knowledge base? Did you experiment with different chunk sizes or overlap strategies?"
+      },
+      {
+        "body": "Did you experiment with different embedding models before settling on `Cohere Embed`? If so, what were the key factors in your decision?"
+      },
+      {
+        "body": "How's the latency performing under peak load with Weaviate? Did you optimize retrieval or have specific indexing strategies?"
+      },
+      {
+        "body": "Any tips for handling ambiguous or very broad user queries where multiple relevant documents might exist?"
+      },
+      {
+        "body": "What's the fallback mechanism for questions the chatbot can't answer or for out-of-domain queries? Does it seamlessly hand off to a human agent?"
+      },
+      {
+        "body": "Did you implement any guardrails or safety mechanisms to prevent the chatbot from generating unhelpful or harmful responses based on retrieved information?"
+      },
+      {
+        "body": "This is a great setup! What's the approximate size of your knowledge base (number of documents/pages)?"
+      }
+    ]
+  }
+]

@@ -1,0 +1,163 @@
+[
+  {
+    "category": "General",
+    "title": "Best practices for managing state in large React applications?",
+    "body": "I'm working on a large-scale React application and finding state management increasingly complex. We're currently using Context API for global state, but it's becoming a bit unwieldy. Has anyone successfully scaled a large application with Context, or should we consider alternatives like Redux or Zustand? Looking for real-world experiences and advice!",
+    "replies": [
+      {
+        "body": "For truly large apps, Redux Toolkit is a solid choice. It reduces boilerplate significantly compared to plain Redux and integrates well with Reselect for memoized selectors."
+      },
+      {
+        "body": "Zustand is fantastic for simplicity and performance. It's much lighter than Redux and handles most use cases well, especially if you're comfortable with hooks."
+      },
+      {
+        "body": "We use Context API for simpler, domain-specific states and combine it with a small state machine library for more complex workflows. It keeps things modular."
+      },
+      {
+        "body": "Don't underestimate the power of 'lifting state up' and 'colocating state'. Often, a lot of complexity comes from putting state too high in the tree when it belongs closer to where it's used."
+      },
+      {
+        "body": "If you decide on Redux, definitely go with RTK Query for data fetching and caching. It's a game-changer and takes care of so much boilerplate."
+      },
+      {
+        "body": "I've seen many projects struggle with Context API at scale. It can cause re-renders if not optimized carefully. Zustand or Jotai are great if you want something minimal but powerful."
+      },
+      {
+        "body": "Consider if all your 'global' state truly needs to be global. Sometimes, breaking it down into smaller, more localized contexts or just prop drilling for specific components is more manageable."
+      },
+      {
+        "body": "MobX is also a powerful alternative if you prefer an observable-based approach. It can be very concise for complex states."
+      }
+    ]
+  },
+  {
+    "category": "General",
+    "title": "Optimizing Next.js build times and cold starts on Vercel",
+    "body": "We've noticed our Next.js application's build times are getting quite long, and initial cold starts on Vercel can be slow, especially for serverless functions. What strategies are people using to optimize these aspects? Any specific configurations or patterns that have helped?",
+    "replies": [
+      {
+        "body": "Ensure you're using `next/image` effectively and optimizing all your static assets. Large images contribute significantly to build size and consequently, build times."
+      },
+      {
+        "body": "Code splitting is key. Make sure dynamic imports are used where appropriate, especially for less-frequently accessed pages or components."
+      },
+      {
+        "body": "Check your `next.config.js` for any heavy plugins or custom Webpack configurations that might be slowing things down. Keep it lean."
+      },
+      {
+        "body": "For serverless functions, review your dependencies. Large `node_modules` bundles mean longer cold starts. Tree-shake aggressively."
+      },
+      {
+        "body": "Consider using Incremental Static Regeneration (ISR) for pages that don't need to be rebuilt on every deploy but can be updated periodically."
+      },
+      {
+        "body": "If you have a lot of data fetching on the server, optimize your database queries or API calls. Slow data fetching directly impacts SSR/SSG build times."
+      },
+      {
+        "body": "Vercel has a 'Serverless Function Logs' tab; check it for function durations and identify bottlenecks in your serverless code."
+      },
+      {
+        "body": "For larger apps, monorepos can sometimes lead to slower builds if not configured correctly. Ensure your build pipeline only builds what's changed."
+      }
+    ]
+  },
+  {
+    "category": "General",
+    "title": "How to handle authentication flows in Next.js without client-side redirects?",
+    "body": "I'm building an application with Next.js and struggling with authentication. Specifically, after a user logs in, I want to redirect them to a dashboard page, but I want to avoid client-side redirects for better UX and SEO. What are the recommended patterns for handling authentication and redirects purely on the server in Next.js?",
+    "replies": [
+      {
+        "body": "`getServerSideProps` is your friend here. You can check the authentication status and return a `redirect` object from it."
+      },
+      {
+        "body": "For `getServerSideProps`, if the user isn't authenticated, you can return `{ redirect: { destination: '/login', permanent: false } }`."
+      },
+      {
+        "body": "`next-auth` is almost the standard for authentication in Next.js. It handles a lot of the redirects and session management out of the box, both client and server side."
+      },
+      {
+        "body": "When using `getServerSideProps`, make sure your authentication logic is robust and secure, as it runs on the server."
+      },
+      {
+        "body": "If you're using a custom backend, ensure your authentication API provides a secure way to verify tokens/sessions on the server-side."
+      },
+      {
+        "body": "Don't forget to set appropriate HTTP only cookies for your session tokens to enhance security and prevent XSS attacks."
+      },
+      {
+        "body": "Sometimes, a combination is best: `getServerSideProps` for initial page load redirects, and client-side logic for subsequent actions that don't require a full page refresh."
+      },
+      {
+        "body": "Be careful with `permanent: true` in redirects. Only use it if the redirect is truly permanent, as browsers will cache it."
+      }
+    ]
+  },
+  {
+    "category": "General",
+    "title": "Choosing between TypeScript and plain JavaScript for a new React project in 2024",
+    "body": "Starting a new React project and the team is divided on whether to use TypeScript or stick with plain JavaScript. I understand the benefits of TypeScript for larger projects, but for a medium-sized application with a tight deadline, is the initial overhead worth it? What are people's experiences with the learning curve and productivity impact?",
+    "replies": [
+      {
+        "body": "TypeScript, no contest. Even for medium projects, the refactoring safety net and autocompletion benefits pay off quickly."
+      },
+      {
+        "body": "The initial overhead of TypeScript is minimal now with modern tooling. Create React App and Next.js both support it out of the box."
+      },
+      {
+        "body": "For a tight deadline, plain JS might feel faster initially, but you'll likely pay for it with more bugs and harder refactoring later. TS saves time in the long run."
+      },
+      {
+        "body": "A good compromise could be to start with JS and introduce TS incrementally, especially for critical modules or data structures, but it's often harder to switch later."
+      },
+      {
+        "body": "The learning curve for TS is not as steep as it once was, especially if you focus on the basics first. The benefits are too big to ignore."
+      },
+      {
+        "body": "If your team isn't familiar with TS, factor in some time for ramp-up. It's an investment, but a worthwhile one."
+      },
+      {
+        "body": "Even without strict types, just using JSDoc can give you some of the benefits of type-checking in plain JavaScript, though less robust."
+      },
+      {
+        "body": "I'd argue that the 'overhead' argument is largely outdated. Modern IDEs and build tools make TypeScript a joy to work with, even for smaller projects."
+      },
+      {
+        "body": "If you care about maintainability and fewer runtime errors, TypeScript is the way to go. It's become standard for a reason."
+      }
+    ]
+  },
+  {
+    "category": "General",
+    "title": "What are your favorite lesser-known React hooks or utility libraries?",
+    "body": "We all know `useState`, `useEffect`, etc., but I'm curious if there are any less common but extremely useful React hooks or small utility libraries that have significantly improved your development workflow. Looking for hidden gems or clever patterns!",
+    "replies": [
+      {
+        "body": "`use-debounce` is a lifesaver for search inputs or any event that fires too frequently. Simple and effective."
+      },
+      {
+        "body": "`react-use` is a fantastic collection of hooks for everything from `useLocalStorage` to `useClickAway`. Definitely worth exploring."
+      },
+      {
+        "body": "I've found `use-immer` to be incredibly useful when dealing with complex nested state. It lets you mutate state directly within a reducer-like function without actual mutation."
+      },
+      {
+        "body": "`useWhyDidYouRender` is a debugging hook that helps identify unnecessary re-renders. Essential for performance optimization."
+      },
+      {
+        "body": "`use-gesture` for handling complex drag, pinch, scroll, etc., interactions. It's powerful and declarative."
+      },
+      {
+        "body": "For form handling, `react-hook-form` might be well-known, but its `useWatch` and `useFormContext` hooks are super useful for dynamic forms."
+      },
+      {
+        "body": "`zustand` isn't a hook itself, but it provides a `useStore` hook that makes global state management incredibly simple and performant."
+      },
+      {
+        "body": "`use-media` for responsive designs based on media queries within your components. Cleaner than messing with window listeners."
+      },
+      {
+        "body": "`react-spring` has its own `useSpring` and `useTransition` hooks for animations that are very powerful and performant, often overlooked outside of specific animation contexts."
+      }
+    ]
+  }
+]

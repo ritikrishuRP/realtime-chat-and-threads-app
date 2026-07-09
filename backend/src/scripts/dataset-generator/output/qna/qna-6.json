@@ -1,0 +1,151 @@
+[
+  {
+    "category": "Q&A",
+    "title": "Docker Compose: Services unable to resolve each other by name",
+    "body": "I'm running a multi-service application with Docker Compose. I have a `web` service and an `api` service. The `web` service tries to connect to the `api` service using `http://api:8000`, but I consistently get a `Name or service not known` error. Both services are defined in the same `docker-compose.yml` file. What could be the issue?",
+    "replies": [
+      {
+        "body": "This sounds like a common networking problem. Are both your services explicitly attached to the same custom network, or are you relying on the default bridge network created by Compose? If you're using a custom network, ensure both services list it under their `networks` section."
+      },
+      {
+        "body": "Try running `docker exec -it <web_container_id> ping api` from your host to check if the DNS resolution works from within the `web` container. This will help confirm if it's a DNS issue or something else."
+      },
+      {
+        "body": "Sometimes simply restarting Docker or doing a `docker-compose down` followed by `docker-compose up --build` can resolve strange networking quirks, especially if networks got corrupted."
+      },
+      {
+        "body": "Make sure there are no typos in your service names. Docker's internal DNS uses the service name directly. If your API service is named `my-api`, then `web` should connect to `http://my-api:8000`."
+      },
+      {
+        "body": "Can you share your `docker-compose.yml`? Without seeing it, it's hard to pinpoint exactly. The network definitions are crucial here."
+      },
+      {
+        "body": "Check your Docker daemon's DNS settings. If it's configured incorrectly, it can sometimes affect internal container DNS resolution, even for Compose services."
+      },
+      {
+        "body": "Ensure you're using a relatively recent version of Docker Compose. Older versions might have had different default networking behaviors or bugs that have since been fixed."
+      },
+      {
+        "body": "If you're using `links`, remember it's a legacy feature and not recommended for service-to-service communication. Service names should be enough for services on the same Compose network."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Difference between EXPOSE in Dockerfile and ports in docker-compose.yml?",
+    "body": "I'm confused about `EXPOSE` in a Dockerfile versus the `ports` mapping in `docker-compose.yml`. What's the fundamental difference? When should I use one over the other, or both?",
+    "replies": [
+      {
+        "body": "`EXPOSE` in a Dockerfile is purely documentation. It tells users of the image which ports the application inside expects to listen on. It doesn't actually publish or open any ports on the host."
+      },
+      {
+        "body": "`ports` in `docker-compose.yml` (or `docker run -p`) actually publishes the container's port to the host machine. This is how you make a service accessible from outside the Docker network."
+      },
+      {
+        "body": "You typically use both. `EXPOSE` in the Dockerfile is good practice for clarity and for tools like `docker inspect`. `ports` in Compose is necessary for external access."
+      },
+      {
+        "body": "Think of `EXPOSE` as metadata. It's like a label saying 'this container has a service listening on X port internally'. `ports` is the actual operational mapping."
+      },
+      {
+        "body": "If you don't use `ports`, your services can still communicate internally within the Docker network (e.g., `web` to `api`) because they are on the same virtual network, even if no ports are exposed to the host."
+      },
+      {
+        "body": "Another way to look at it: `EXPOSE` affects internal container networking, making the port available to other containers on the same Docker network. `ports` affects external networking, mapping that internal port to one on the host machine."
+      },
+      {
+        "body": "An interesting nuance: if you use `docker run -P` (uppercase P), Docker will automatically map all `EXPOSE`d ports to random high ports on the host. So `EXPOSE` isn't entirely without function beyond documentation, but `ports` gives you explicit control."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "How to create an isolated network for specific Docker Compose services?",
+    "body": "I have a large `docker-compose.yml` file with many services. I want to create a separate, isolated network for a specific subset of services (e.g., `db`, `cache`, and `worker`) so they can only communicate with each other, and not directly with other services like `frontend` or `api`. How can I achieve this network isolation?",
+    "replies": [
+      {
+        "body": "You can define multiple custom networks in your `docker-compose.yml`. Define a `backend-net` and a `frontend-net`, then assign your `db`, `cache`, `worker` services to `backend-net`, and `frontend`, `api` to `frontend-net`."
+      },
+      {
+        "body": "To define a custom network, add a `networks` section at the top level of your `docker-compose.yml`, then under each service, specify which networks it belongs to. For example: `networks: - backend-net`."
+      },
+      {
+        "body": "Services not explicitly assigned to a network will go to the default bridge network. To truly isolate, ensure ALL services are assigned to a custom network, or that only the desired ones are on the shared network."
+      },
+      {
+        "body": "You can also have services on multiple networks. For instance, an `api` service could be on both `frontend-net` (to talk to frontend) and `backend-net` (to talk to db/cache)."
+      },
+      {
+        "body": "This is a great practice for security and organization. It limits the blast radius if one part of your app is compromised and helps manage traffic flow."
+      },
+      {
+        "body": "Remember that once services are on separate networks, they can no longer resolve each other by service name unless they share a common network or you route traffic through an intermediary. Ensure your architecture supports this."
+      },
+      {
+        "body": "Here's a quick example: `networks: default: {} backend_network: {} services: db: networks: - backend_network worker: networks: - backend_network frontend: networks: - default`"
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Docker containers failing DNS resolution for external services",
+    "body": "My Docker Compose services can communicate perfectly fine with each other, but they are consistently failing to resolve external hostnames, like `api.example.com` or even `archive.ubuntu.com` when I try to run `apt update`. I'm getting `Temporary failure in name resolution`. What could be causing this, and how can I fix it?",
+    "replies": [
+      {
+        "body": "This usually points to a problem with the DNS configuration Docker uses. Check the `/etc/resolv.conf` file inside one of your failing containers. It should point to a valid DNS server, typically Docker's internal DNS or your host's DNS."
+      },
+      {
+        "body": "Sometimes, the host's DNS configuration isn't properly picked up by the Docker daemon. You can explicitly configure DNS servers for Docker in `/etc/docker/daemon.json` (Linux) or through the Docker Desktop settings (Windows/macOS)."
+      },
+      {
+        "body": "If you're on a corporate network, you might be behind a proxy or firewall that's blocking DNS queries or specific ports. Check with your network admin or try configuring proxy settings for Docker."
+      },
+      {
+        "body": "Ensure your host machine itself can resolve those external names. If your host can't, Docker containers won't be able to either."
+      },
+      {
+        "body": "If your host's `/etc/resolv.conf` has entries like `nameserver 127.0.0.53` (systemd-resolved), Docker might struggle. You can try setting Docker to use Google's DNS `daemon.json`: `{\"dns\": [\"8.8.8.8\", \"8.8.4.4\"]}` and restart Docker."
+      },
+      {
+        "body": "Are you using any custom Docker networks that might have specific DNS configurations? Sometimes third-party network drivers or custom network setups can override defaults."
+      },
+      {
+        "body": "A quick test: `docker run --rm alpine nslookup google.com`. If this fails, it's a fundamental Docker DNS issue. If it works, the problem might be specific to your Compose setup."
+      },
+      {
+        "body": "Make sure no VPN client on your host is interfering with DNS routing, especially split-tunnel VPNs. They can sometimes reroute all DNS traffic."
+      }
+    ]
+  },
+  {
+    "category": "Q&A",
+    "title": "Accessing a service running on the Docker host from within a container",
+    "body": "I have a service (e.g., a database or a local API) running directly on my host machine at `localhost:3000`. I want my Docker container, which is part of a Docker Compose setup, to be able to connect to this host service. How can I configure my container or Compose file to achieve this?",
+    "replies": [
+      {
+        "body": "If you're using Docker Desktop (Mac/Windows), the easiest way is to use the special DNS name `host.docker.internal`. Your container can connect to `http://host.docker.internal:3000`."
+      },
+      {
+        "body": "For Linux, `host.docker.internal` doesn't work by default. You need to find your host machine's IP address on the Docker bridge network (e.g., `docker network inspect bridge` and look for Gateway IP) or its actual LAN IP."
+      },
+      {
+        "body": "Once you have the host's IP, you can use `extra_hosts` in your `docker-compose.yml` to map a hostname to that IP for your container. E.g., `extra_hosts: - \"host.example.com:<HOST_IP>\"` then connect to `http://host.example.com:3000`."
+      },
+      {
+        "body": "Alternatively, for Linux, you can try `network_mode: host` for your service in Compose. This makes the container share the host's network stack, allowing `localhost:3000` to work, but it sacrifices some isolation."
+      },
+      {
+        "body": "If using `network_mode: host`, be aware that all ports exposed by the container will be exposed directly on the host, which might lead to port conflicts and reduced security."
+      },
+      {
+        "body": "Also, ensure your host service is not listening only on `127.0.0.1` but rather on `0.0.0.0` or your host's actual network interface IP, so it's accessible from outside the host's loopback interface."
+      },
+      {
+        "body": "A simpler approach, if feasible, is to containerize the host service as well. This often simplifies networking issues within a Dockerized environment."
+      },
+      {
+        "body": "To find your host IP on Linux, you can run `ip -4 addr show docker0` (if `docker0` is your bridge interface) or `hostname -I | awk '{print $1}'` to get your primary IP and use that."
+      }
+    ]
+  }
+]

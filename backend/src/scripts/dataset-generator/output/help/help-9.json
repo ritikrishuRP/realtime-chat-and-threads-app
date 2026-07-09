@@ -1,0 +1,145 @@
+[
+  {
+    "category": "Help",
+    "title": "GitHub Actions cache not working consistently for npm install",
+    "body": "I'm trying to optimize my CI build times by caching `node_modules` in GitHub Actions. I've set up the `actions/cache@v3` action, but it seems like it's not hitting the cache every time, even when `package-lock.json` hasn't changed. Any ideas why?",
+    "replies": [
+      {
+        "body": "Check your `cache-key` and `restore-keys`. Sometimes a subtle change in the key can invalidate the cache, especially if you're using dynamic elements."
+      },
+      {
+        "body": "Are you using `hashFiles('**/package-lock.json')`? Make sure the path is correct relative to your workflow file and covers all relevant lock files if you have a monorepo."
+      },
+      {
+        "body": "Also, ensure the `path` for the cache action is `~/.npm` or `node_modules` directly, depending on what you're trying to cache and how npm stores its packages."
+      },
+      {
+        "body": "Sometimes, the `restore-keys` are too broad. Try to be more specific. If it's still missing, it might be a race condition if multiple workflows are attempting to write to the same cache key simultaneously."
+      },
+      {
+        "body": "Make sure you're running `npm ci` after restoring the cache, not `npm install`. `npm ci` is designed for CI environments and works better with caches by ensuring exact dependency versions."
+      },
+      {
+        "body": "Are you sure no other steps are modifying `package-lock.json` before the cache step? Even a tiny change would invalidate the key."
+      },
+      {
+        "body": "Also verify that the cache restore step is positioned *before* your `npm install/ci` step. This is a common oversight."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "How to optimize Docker multi-stage builds for faster CI/CD?",
+    "body": "We're using Docker multi-stage builds for our application, and while it helps with image size, the build process in CI is still quite slow. We're using `docker build . -t myapp` in our GitHub Actions workflow. Any tips for speeding this up?",
+    "replies": [
+      {
+        "body": "Use a `.dockerignore` file! Exclude anything not needed for the build, like `node_modules` (if you're copying them in later stages), `.git`, `dist` (if built inside Docker), etc. This reduces the build context."
+      },
+      {
+        "body": "Leverage Docker layer caching. Order your `Dockerfile` instructions from least to most frequently changing. Dependencies (`COPY package.json`, `RUN npm install`) should come before application code (`COPY . .`) to maximize cache hits."
+      },
+      {
+        "body": "Consider using build caching with `buildx` and `cache-from`/`cache-to` flags. This can drastically improve build times by reusing layers from previous builds, potentially across different CI runs."
+      },
+      {
+        "body": "Are you building on every push? For PRs, you might only need to build if specific files change using path filtering in GitHub Actions to avoid unnecessary full builds."
+      },
+      {
+        "body": "For frontend projects, consider splitting your build step into a separate image or using a pre-built base image with common dependencies to speed up the initial `npm install`."
+      },
+      {
+        "body": "Ensure your base images are minimal and up-to-date. Large base images can slow down initial pulls and create larger cache layers."
+      },
+      {
+        "body": "If you're running tests inside the Docker build, consider separating that into a different CI step or a different Dockerfile target to avoid rebuilding the test environment when only application code changes."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "GitHub Actions S3/CloudFront deployment failing with \"Access Denied\"",
+    "body": "I'm setting up a CI/CD pipeline with GitHub Actions to deploy a static site to AWS S3 and then invalidate CloudFront. I've configured `aws-actions/configure-aws-credentials` and `aws-actions/s3-sync`, but I'm consistently getting \"Access Denied\" errors, even after attaching `AmazonS3FullAccess` and `CloudFrontFullAccess` policies to my IAM user/role. What am I missing?",
+    "replies": [
+      {
+        "body": "Are you using an IAM User or an IAM Role with OIDC? If a role, double-check the trust policy carefully to ensure it allows `sts:AssumeRole` from `oidc.githubusercontent.com` with the correct conditions."
+      },
+      {
+        "body": "\"FullAccess\" policies are often too broad and sometimes hide the actual permission issue. Try to narrow down the permissions. For S3, you typically need `s3:PutObject`, `s3:GetObject`, `s3:ListBucket`, `s3:DeleteObject` for the specific bucket and its objects."
+      },
+      {
+        "body": "For CloudFront, you primarily need `cloudfront:CreateInvalidation` on the specific distribution ARN."
+      },
+      {
+        "body": "Did you explicitly specify the `region` in your `aws-actions/configure-aws-credentials` step? It's a common oversight that can lead to \"Access Denied\" if the default region is incorrect."
+      },
+      {
+        "body": "Check your S3 bucket policy. It might be explicitly denying access or overriding the IAM permissions, preventing access even if the IAM user/role has permissions."
+      },
+      {
+        "body": "Make sure your `AWS_REGION` environment variable is set correctly in the workflow, or explicitly passed to the actions if they don't pick it up from `configure-aws-credentials`."
+      },
+      {
+        "body": "Sometimes, \"Access Denied\" can also mean the object path doesn't exist, or the bucket name is misspelled in your `s3-sync` configuration. Double-check all resource names."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "How to run GitHub Actions workflow only if specific files/folders change?",
+    "body": "I have a monorepo structure, and I want to run different CI workflows only when relevant files change. For example, if only frontend code changes, run frontend tests and build. If only backend code changes, run backend tests. How can I achieve this efficiently in GitHub Actions?",
+    "replies": [
+      {
+        "body": "The simplest approach is to use `paths` or `paths-ignore` in your `on: push` or `on: pull_request` triggers at the workflow level. This will only trigger the workflow if changes are detected in those paths."
+      },
+      {
+        "body": "For more granular control within a single workflow, you can use actions like `dorny/paths-filter@v2`. It generates outputs indicating which defined paths have changed, which you can then use in `if` conditions on subsequent jobs or steps."
+      },
+      {
+        "body": "`tj-actions/changed-files` is another great option for getting a list of changed files. You can then use `if: contains(steps.changed-files.outputs.all_changed_files, 'frontend/')` or similar expressions to conditionally execute steps."
+      },
+      {
+        "body": "Remember that `paths` in the `on` trigger works on the event itself. For Pull Requests, `paths-filter` or `changed-files` are often more robust for evaluating changes relative to the base branch, rather than just the push."
+      },
+      {
+        "body": "If you have a very complex monorepo, consider a dedicated monorepo tool like Nx or Lerna. They have built-in capabilities for detecting affected projects and can integrate with CI to optimize runs."
+      },
+      {
+        "body": "For `paths-filter` and `changed-files`, ensure your `base` and `head` branches are correctly configured, especially when dealing with merge commits or PRs targeting different branches."
+      },
+      {
+        "body": "You can also combine `paths` at the workflow trigger level for initial filtering, and then use job-level `if` conditions with changed-files actions for further refinement within a triggered workflow."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Best practices for integrating security scans into CI builds",
+    "body": "Our team is looking to integrate security scanning (SAST/DAST) into our CI/CD pipeline, specifically within GitHub Actions. We want to catch vulnerabilities early. What are the best practices, recommended tools, and common pitfalls to avoid when setting this up?",
+    "replies": [
+      {
+        "body": "For Static Application Security Testing (SAST), start with GitHub's built-in CodeQL. It's free for public repos, offers good coverage, and is well-integrated with GitHub's security features."
+      },
+      {
+        "body": "OWASP Dependency-Check or Snyk are excellent for Software Composition Analysis (SCA) to find vulnerabilities in your third-party dependencies. Integrate them early in the build process, often right after dependency installation."
+      },
+      {
+        "body": "Dynamic Application Security Testing (DAST) tools like OWASP ZAP can be run against a deployed (even temporary) application instance. This is typically a later stage in the pipeline, after the build and deployment."
+      },
+      {
+        "body": "Don't block the entire CI/CD pipeline on non-critical security findings initially. Start with reporting and gradually enforce stricter policies (e.g., failing builds on high-severity issues) as your team matures and fixes issues."
+      },
+      {
+        "body": "Focus on actionable findings. Too much noise from scanners can lead to alert fatigue. Tune your tools to prioritize critical and high-severity issues relevant to your application."
+      },
+      {
+        "body": "Consider integrating secret scanning (e.g., `git-secrets` or GitHub's native secret scanning) to prevent credentials and sensitive information from being committed to your repositories."
+      },
+      {
+        "body": "Make sure your security scans run on every push to your main branch and, ideally, on every pull request to get early feedback and prevent new vulnerabilities from being introduced."
+      },
+      {
+        "body": "For DAST, ensure your application is running in a consistent and accessible state (e.g., via a temporary staging environment) before the scanner attempts to crawl and test it."
+      }
+    ]
+  }
+]

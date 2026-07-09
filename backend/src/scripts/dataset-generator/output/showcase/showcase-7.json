@@ -1,0 +1,157 @@
+[
+  {
+    "category": "Showcase",
+    "title": "My first cross-platform mobile app built with React Native and Expo!",
+    "body": "Thrilled to share my first full-fledged mobile application: 'TaskFlow', a productivity and task management app! It's built entirely with React Native and Expo, utilizing SQLite for local storage and React Navigation for routing. The app allows users to create, categorize, and track tasks, set reminders, and view progress. I'm really proud of how it turned out and would love to hear your feedback!",
+    "replies": [
+      {
+        "body": "This looks super clean! The UI is very intuitive. How did you handle the reminder notifications with Expo? Did you use the built-in Notifications API or a third-party library?"
+      },
+      {
+        "body": "Awesome work! I'm curious about your experience with SQLite in Expo. Did you use `expo-sqlite`? Were there any particular challenges you faced regarding data migration or schema updates?"
+      },
+      {
+        "body": "Great project! The dark mode toggle is a nice touch. Any plans to add cloud synchronization, perhaps with Firebase or a custom backend?"
+      },
+      {
+        "body": "TaskFlow looks really polished for a first app! Congrats! I'm just starting with React Native; what was your biggest learning curve during this project?"
+      },
+      {
+        "body": "Very impressive! The task categorization feature looks well-implemented. Did you consider using a different state management solution, or was local SQLite sufficient for your needs?"
+      },
+      {
+        "body": "I love the progress tracking visuals! Are you planning to open-source the code? I'd be interested in seeing how you structured the project."
+      },
+      {
+        "body": "Fantastic! Seeing projects like this keeps me motivated to learn React Native. How long did it take you to build this from scratch?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "React Native & Expo Weather App with real-time updates and animations",
+    "body": "Just finished and deployed 'CloudCast', a weather application built with React Native and Expo. It fetches real-time weather data, displays animated weather conditions (rain, sun, clouds), and uses geolocation to show local forecasts. I focused heavily on smooth animations using `react-native-reanimated` and `moti`. It's live on Expo Go, feel free to test it out!",
+    "replies": [
+      {
+        "body": "The animations are incredibly smooth! That's impressive for an Expo app. Did you encounter any performance issues on older devices, especially with the weather condition animations?"
+      },
+      {
+        "body": "This looks beautiful! Which weather API did you integrate with? And how did you handle the API key security with Expo? Did you use `expo-constants` for environment variables?"
+      },
+      {
+        "body": "Awesome job! I'm trying to learn `moti` and `reanimated` myself. Do you have any go-to resources or tips for getting started with complex animations in React Native?"
+      },
+      {
+        "body": "CloudCast is fantastic! The UI is very polished. Have you considered adding a 7-day forecast or hourly predictions? That would be a great addition."
+      },
+      {
+        "body": "Great showcase! How accurate is the geolocation? Did you use `expo-location` and were there any specific permissions challenges you faced?"
+      },
+      {
+        "body": "Absolutely stunning work! This definitely highlights the power of Expo and React Native for beautiful UIs. Are you planning to add any widgets for the home screen?"
+      },
+      {
+        "body": "The dynamic background based on weather conditions is a really nice touch. Did you use a library for that or custom logic?"
+      },
+      {
+        "body": "Very clean design! What was your strategy for managing the different animation states efficiently without causing re-renders?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "My Social Feeds Clone in React Native & Expo - 'ConnectSphere'",
+    "body": "I've been working on 'ConnectSphere', a social media feed application clone built with React Native and Expo. It features user authentication, a scrollable feed with posts, likes, comments, and profile pages. I used Firebase for backend services (Auth, Firestore, Storage) and `react-query` for data fetching and caching. Feedback on the UX/UI or any performance suggestions would be highly appreciated!",
+    "replies": [
+      {
+        "body": "Looks really good! The integration with Firebase seems seamless. How did you handle image uploads to Firebase Storage, especially progress indication, within an Expo environment?"
+      },
+      {
+        "body": "ConnectSphere looks amazing! `react-query` for data fetching is a solid choice. Did you implement infinite scrolling for the feed, and if so, how did `react-query` assist with that?"
+      },
+      {
+        "body": "Fantastic work! The UI reminds me of Instagram, very well done. Any specific challenges you faced integrating Firebase Authentication with Expo, particularly on the web build if you considered it?"
+      },
+      {
+        "body": "This is a comprehensive project! Building a social feed is no small feat. What was your biggest takeaway or learning from using Firestore with `react-query`?"
+      },
+      {
+        "body": "Very impressive! The comment section seems robust. Did you implement real-time updates for comments using Firestore's real-time listeners, or is it a pull-to-refresh model?"
+      },
+      {
+        "body": "Great job! The profile page looks clean. Did you use any specific component library for the UI, or is it all custom-built components?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Workout Tracker Mobile App built with Expo and TypeScript",
+    "body": "Proud to share my latest creation: 'LiftLog', a workout tracking mobile app developed using React Native with Expo and TypeScript! It allows users to log their exercises, track sets, reps, and weight, visualize progress with charts, and create custom workout routines. I focused on a type-safe codebase and good performance. All data is stored locally using Realm DB. What do you guys think?",
+    "replies": [
+      {
+        "body": "LiftLog looks fantastic, especially the progress visualization! How was your experience integrating Realm DB with Expo? Were there any specific configuration steps or challenges?"
+      },
+      {
+        "body": "This is super useful! The UI is very clean and functional. What charting library did you use for the progress graphs? And how did you manage the data aggregation for those charts?"
+      },
+      {
+        "body": "Awesome work on focusing on type safety with TypeScript! It really makes a difference for larger projects. Did you use any specific practices or patterns to keep your components and data models strictly typed?"
+      },
+      {
+        "body": "Very cool app! The ability to create custom routines is a must-have. Are you considering adding features like sharing workouts or perhaps a 'rest timer' between sets?"
+      },
+      {
+        "body": "Great showcase! How did you handle the 'offline-first' aspect with Realm DB, and what's your strategy if you decide to introduce cloud sync later?"
+      },
+      {
+        "body": "This is exactly what I need! The exercise logging input looks very user-friendly. Did you use a custom numeric input component or leverage a library for that?"
+      },
+      {
+        "body": "Impressive! Building a workout tracker with local persistence is a solid use case for Expo. Did you face any performance issues when querying large amounts of historical workout data from Realm?"
+      },
+      {
+        "body": "Looks great! The overall aesthetic is very motivational. How did you manage the global state for routines and workout logs? Redux, Context API, or something else?"
+      },
+      {
+        "body": "Excellent project! TypeScript and Expo is a powerful combo. What's your advice for someone new to mobile development looking to build their first complex app with this stack?"
+      }
+    ]
+  },
+  {
+    "category": "Showcase",
+    "title": "Expo + React Native e-commerce app: 'ShopEasy' with Stripe integration",
+    "body": "Excited to share 'ShopEasy', my latest mobile e-commerce application built with React Native and Expo! It features product listings, a shopping cart, user authentication, and full Stripe payment integration. I leveraged Redux Toolkit for state management, `formik` for form handling, and a custom Node.js backend for API interactions and Stripe webhooks. Any feedback on the payment flow or overall user experience would be greatly appreciated!",
+    "replies": [
+      {
+        "body": "This is a huge accomplishment! Stripe integration is always a challenge. How did you handle the secure communication between your Expo app, your Node.js backend, and Stripe's API?"
+      },
+      {
+        "body": "ShopEasy looks very professional! The product detail pages are well-designed. What was your experience like setting up the Stripe webhooks, and how did you test them during development with Expo?"
+      },
+      {
+        "body": "Fantastic work! Using Redux Toolkit and Formik together creates a robust setup. Did you implement any optimistic updates for the shopping cart or other user interactions?"
+      },
+      {
+        "body": "Great project! The authentication flow seems smooth. Did you use a specific library for the UI components, or is it mostly custom styling?"
+      },
+      {
+        "body": "Very impressive! An e-commerce app is a great showcase. Any plans to add features like product reviews, search filters, or push notifications for order updates?"
+      },
+      {
+        "body": "Super cool! I'm struggling with setting up payment gateways. Can you share any specific resources or tutorials you found helpful for integrating Stripe with React Native and a custom backend?"
+      },
+      {
+        "body": "The overall UX seems really fluid. Did you use `expo-secure-store` for storing any sensitive user data or tokens, and if so, what's your strategy for token refresh?"
+      },
+      {
+        "body": "Amazing! The product image carousel looks great. Did you use `react-native-snap-carousel` or a custom implementation for that?"
+      },
+      {
+        "body": "This is a solid demonstration of what's possible with Expo and React Native. How did you manage the deployment process for both the mobile app (Expo) and your Node.js backend?"
+      },
+      {
+        "body": "Excellent job! The shopping cart experience looks intuitive. Did you implement any local caching for product data to improve perceived performance?"
+      }
+    ]
+  }
+]

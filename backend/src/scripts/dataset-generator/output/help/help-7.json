@@ -1,0 +1,160 @@
+[
+  {
+    "category": "Help",
+    "title": "Best Redis eviction policy for a high-traffic cache?",
+    "body": "We're using Redis as a cache for our main API, and with increasing traffic, we're hitting memory limits. Currently, we're using `noeviction` which is obviously problematic. What's the recommended eviction policy for a high-traffic environment where we primarily cache results that are computationally expensive to regenerate?",
+    "replies": [
+      {
+        "body": "Definitely look into `allkeys-lru`. It's generally a good default for caching as it removes the least recently used keys, which often aligns with what you want to keep."
+      },
+      {
+        "body": "I've had good success with `volatile-lru` if you can set TTLs on most of your keys. It's more memory efficient if not all keys need to be evictable."
+      },
+      {
+        "body": "It really depends on your access patterns. If some data is more critical, consider `volatile-lfu` if you access hot items frequently. LFU can be better than LRU for certain workloads."
+      },
+      {
+        "body": "Don't forget to monitor your hit/miss ratio closely after changing the policy. That's the real test of whether it's working for your specific use case."
+      },
+      {
+        "body": "What's your average key size and access pattern? If you have a few very large keys that are rarely accessed, LRU might remove them too quickly. You might need a custom solution or a mix of policies."
+      },
+      {
+        "body": "Also, make sure your maxmemory setting is appropriate. Too low, and you'll evict constantly; too high, and you risk OOM."
+      },
+      {
+        "body": "Consider `allkeys-random` if you truly don't have a preference for which keys to evict and want simplicity, but LRU/LFU are usually superior."
+      },
+      {
+        "body": "For critical data, perhaps don't cache it in Redis at all, or use a separate Redis instance with `noeviction` for those specific keys, if feasible."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Scaling user sessions with Redis - best practices?",
+    "body": "Our application is growing, and we're currently storing user sessions in local server memory. This is becoming a bottleneck for horizontal scaling. We're looking to move to Redis for session management. What are the best practices for implementing scalable and secure user sessions with Redis?",
+    "replies": [
+      {
+        "body": "Store session IDs in cookies and actual session data (user ID, roles, etc.) in Redis. Use a unique, strong session ID as the Redis key."
+      },
+      {
+        "body": "Always set an appropriate TTL (expiration) on your session keys in Redis. This cleans up old sessions automatically and improves security."
+      },
+      {
+        "body": "Make sure your Redis connection is secure (TLS) and authenticated. Session data can be sensitive."
+      },
+      {
+        "body": "Consider using a `HGETALL` and `HMSET` approach for session data if you have multiple fields, rather than individual `GET`/`SET` calls for each piece of data. It's more atomic and efficient."
+      },
+      {
+        "body": "For high availability, run Redis in a Sentinel or Cluster setup. Don't rely on a single Redis instance for critical session data."
+      },
+      {
+        "body": "Don't store too much data in the session. Keep it lean to minimize network traffic and Redis memory usage. Fetch dynamic data from your primary database if needed."
+      },
+      {
+        "body": "Implement session invalidation properly (e.g., on logout, password change). Delete the Redis key corresponding to the session ID."
+      },
+      {
+        "body": "If you're using Node.js, `connect-redis` is a very popular and well-maintained session store for Express. Similar libraries exist for other frameworks."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Troubleshooting high Redis latency on a caching instance",
+    "body": "We're experiencing intermittent high latency when accessing our Redis caching instance, especially during peak hours. The server itself isn't maxed out on CPU or memory, and network seems fine. What are common culprits or diagnostic steps for Redis latency issues?",
+    "replies": [
+      {
+        "body": "Check for slow commands. `redis-cli --latency` can show you general latency, but `redis-cli slowlog get 10` will reveal specific commands that are taking too long."
+      },
+      {
+        "body": "Are you doing any `KEYS` commands in production? That's a huge no-no and can block the server. Use `SCAN` instead."
+      },
+      {
+        "body": "It could be an RDB snapshot or AOF rewrite happening. Check your Redis logs during the latency spikes for messages about `BGSAVE` or `BGREWRITEAOF`."
+      },
+      {
+        "body": "Verify your network configuration. Even if it 'seems fine,' subtle issues like bufferbloat or misconfigured NICs can cause intermittent latency."
+      },
+      {
+        "body": "Check `INFO` output, especially `connected_clients` and `blocked_clients`. A large number of blocked clients can indicate issues."
+      },
+      {
+        "body": "Is your Redis instance running on a VM? Sometimes other noisy neighbors on the same physical host can impact performance."
+      },
+      {
+        "body": "Large key sizes? Storing huge strings or large sets/hashes can increase command execution time, especially for operations that touch all elements."
+      },
+      {
+        "body": "Client-side issues? Check if your application code is making too many round trips or holding connections for too long."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Implementing a distributed lock using Redis: pitfalls and best practices?",
+    "body": "I need to implement a distributed lock across several microservices to prevent race conditions when updating a shared resource. I'm considering using Redis for this. What are the common pitfalls and best practices for creating a robust distributed lock with Redis?",
+    "replies": [
+      {
+        "body": "The standard approach is `SET mylock random_value NX PX 30000`. `NX` ensures it's only set if not exists, `PX` sets an expiry."
+      },
+      {
+        "body": "Crucially, the `random_value` must be unique to your lock request. When releasing, you only delete the lock if its value matches your `random_value` using a Lua script to prevent deleting someone else's lock."
+      },
+      {
+        "body": "Expiration (TTL) is non-negotiable. If a service crashes while holding a lock, it needs to eventually expire to prevent deadlocks."
+      },
+      {
+        "body": "Be aware of clock skew if you're trying to implement Redlock. It's complex and has been controversial. For most use cases, a single-instance Redis lock with proper TTL and unique value is sufficient."
+      },
+      {
+        "body": "What happens if your service holds the lock, processes, and then the Redis master fails and a replica takes over before the lock expires? Your service might think it still holds the lock, but the new master doesn't have it. This is a common pitfall without Redlock (and even with it, complexities remain)."
+      },
+      {
+        "body": "Consider using an existing library like Redisson (Java) or node-redlock (Node.js) rather than rolling your own. They're battle-tested and handle many edge cases."
+      },
+      {
+        "body": "Make sure your TTL is long enough for the operation but short enough to recover quickly from a crashed process."
+      },
+      {
+        "body": "If atomicity is paramount, a Lua script for both acquiring and releasing the lock is a good idea to ensure multiple commands act as a single unit."
+      },
+      {
+        "body": "The `random_value` is essential for reentrancy issues. If a process acquires a lock, then tries to acquire it again, it should succeed, but only if it's the *same* process. A simple `SETNX` won't handle that."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "When is Memcached a better choice than Redis for caching?",
+    "body": "I'm setting up a new caching layer for a read-heavy application. Everyone seems to be recommending Redis, but I've heard Memcached is sometimes better for pure caching. When would Memcached be a more suitable choice than Redis?",
+    "replies": [
+      {
+        "body": "If you literally ONLY need a simple key-value store for caching and don't require any advanced data structures, persistence, or Pub/Sub, Memcached can be slightly faster and simpler to manage."
+      },
+      {
+        "body": "Memcached is generally seen as more memory-efficient for very large numbers of small keys, as its internal memory management (slab allocator) can be more optimized for that specific use case."
+      },
+      {
+        "body": "If your team already has extensive experience and tooling around Memcached, and your needs are basic, sticking with what you know can reduce operational overhead."
+      },
+      {
+        "body": "Redis offers persistence, which can be an overhead if you truly only want an ephemeral cache. Memcached is purely in-memory."
+      },
+      {
+        "body": "Redis has a single-threaded event loop, which can become a bottleneck if you have extremely high command throughput. Memcached can utilize multiple CPU cores more effectively for concurrent requests, though this is often debated."
+      },
+      {
+        "body": "For horizontal scaling, Memcached clients typically handle sharding (consistent hashing) on the client side, which can be simpler to set up initially than a full Redis Cluster if you don't need its features."
+      },
+      {
+        "body": "In most modern scenarios, the additional features and robust ecosystem of Redis often outweigh the marginal performance or simplicity benefits of Memcached, unless you have a very specific, high-scale, simple caching need."
+      },
+      {
+        "body": "Think about future needs. If there's any chance you'll want sets, hashes, lists, geospatial data, or Pub/Sub down the line, starting with Redis makes that transition seamless."
+      }
+    ]
+  }
+]

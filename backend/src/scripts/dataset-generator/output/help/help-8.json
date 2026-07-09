@@ -1,0 +1,160 @@
+[
+  {
+    "category": "Help",
+    "title": "Git Merge vs Rebase: When to use which in practice?",
+    "body": "Hi everyone, I'm new to Git and constantly confused about when to use `git merge` versus `git rebase`. I've read some articles, but the practical implications still aren't clear to me. Can someone explain the core differences, pros/cons, and provide some common real-world scenarios for each? I want to understand which strategy is better for integrating feature branches into `main` and how it affects the commit history.",
+    "replies": [
+      {
+        "body": "Generally, `git merge` preserves history, creating a merge commit. This means you can always see exactly when and where a branch was integrated. It's often preferred for shared branches because it doesn't rewrite history, making it safer for collaboration."
+      },
+      {
+        "body": "`git rebase`, on the other hand, rewrites history by moving your branch's commits to a new base. This results in a cleaner, linear history, avoiding merge commits. It's great for keeping your feature branch up-to-date with `main` before merging, but you should NEVER rebase a branch that others have already pulled from."
+      },
+      {
+        "body": "A good rule of thumb: Merge for integrating public/shared branches into main. Rebase for tidying up your local, unpushed feature branch, or for pulling changes from upstream into your feature branch (e.g., `git pull --rebase`)."
+      },
+      {
+        "body": "Think of it this way: Merge is like adding a new chapter that summarizes changes. Rebase is like editing existing chapters to make them flow better, as if your work was always based on the latest version."
+      },
+      {
+        "body": "For feature branch integration into `main` in a team, many opt for merge. It shows exactly when the feature was integrated. If you want a perfectly linear history, some teams use rebase-and-fast-forward, but that requires discipline."
+      },
+      {
+        "body": "If you're working alone on a feature branch, frequently rebasing it onto `main` keeps your branch up-to-date and makes the eventual merge (or fast-forward merge) much smoother. It avoids large, complex merge conflicts at the end."
+      },
+      {
+        "body": "My team uses merge for all integrations into `main`. The `git log --graph` can look a bit messy, but it accurately reflects the development timeline, which is important for auditing and debugging later."
+      },
+      {
+        "body": "Just remember the golden rule: Don't rebase commits that have already been pushed to a shared remote repository. It creates headaches for anyone who has pulled those commits."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Severe Merge Conflicts After Long-Running Feature Branch - Best Strategies?",
+    "body": "I've been working on a significant feature branch for a couple of weeks, and the `main` branch has evolved quite a bit since I started. Now, when I try to merge my feature branch back into `main`, I'm encountering a massive number of merge conflicts. It feels overwhelming. What are the best strategies to resolve these kinds of large-scale conflicts, or better yet, how can I avoid them in the future?",
+    "replies": [
+      {
+        "body": "This is a classic problem! For resolving current conflicts, use a good visual merge tool (like VS Code's built-in tool, KDiff3, Meld). Go through each conflict marker (`<<<<<<<`, `=======`, `>>>>>>>`) carefully. Focus on understanding the intent of both sides."
+      },
+      {
+        "body": "A common strategy for large conflicts is to rebase your feature branch onto the latest `main` *before* attempting the final merge. This brings `main`'s changes into your branch first, allowing you to resolve conflicts iteratively during the rebase process, commit by commit, making it more manageable."
+      },
+      {
+        "body": "To avoid this in the future, pull/merge/rebase `main` into your feature branch frequently (e.g., daily or every few days). This keeps your feature branch up-to-date with `main`'s changes in smaller, more manageable chunks, preventing a 'big bang' conflict scenario."
+      },
+      {
+        "body": "If the conflicts are truly massive across many files, consider creating a 'merge helper' branch. Merge `main` into this helper branch, resolve conflicts there, then merge the helper branch into your feature branch. This isolates the conflict resolution."
+      },
+      {
+        "body": "Break down your feature into smaller, independent sub-features. Each sub-feature could have its own short-lived branch that gets merged into `main` more frequently. This reduces the scope of any single merge."
+      },
+      {
+        "body": "Sometimes, if the changes in `main` are fundamentally incompatible with your feature, it might be easier to `git reset --soft` your feature branch back to a point before the conflicts, pull `main` to a new branch, and then re-apply your changes manually, or cherry-pick specific commits."
+      },
+      {
+        "body": "When resolving conflicts, remember to test frequently. After resolving a set of conflicts and committing, run your tests to ensure nothing broke. It's easy to accidentally introduce bugs when manually resolving code differences."
+      },
+      {
+        "body": "For `git rebase`, if you run into a conflict and aren't sure, `git rebase --abort` will get you back to where you started. Don't be afraid to try, abort, and try again if needed."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Rebase on a Shared Branch: What went wrong and how to fix it?",
+    "body": "I made a huge mistake. I was working on a feature branch (`feature/A`) that had already been pushed to our remote and was being collaborated on by a teammate. To update it with `develop`, I ran `git pull --rebase` and then `git push --force`. Now my teammate is complaining about detached HEAD states and weird history. What did I do wrong, and how can we both recover from this mess?",
+    "replies": [
+      {
+        "body": "You hit the classic 'don't rebase public history' trap! When you `git pull --rebase` and then `git push --force` on a shared branch, you effectively rewrote the history that your teammate already had. Their local branch now points to commits that no longer exist on the remote, causing the issues."
+      },
+      {
+        "body": "To recover your teammate's side: They need to discard their local, old history and re-fetch the new, rebased history. They can usually do this with `git fetch origin` and then `git reset --hard origin/feature/A`. WARNING: This will discard any uncommitted local changes they might have had."
+      },
+      {
+        "body": "If your teammate had local unpushed commits on top of the 'old' history, it gets trickier. They might need to `git reflog` to find their old commits, then `git cherry-pick` them onto the new `origin/feature/A` head after the hard reset. Communication is key here to identify what they had."
+      },
+      {
+        "body": "For your own future reference, if you need to update a shared branch with `develop`, it's generally safer to `git merge develop` into your `feature/A` branch. This creates a merge commit and preserves history, avoiding the rewrite."
+      },
+      {
+        "body": "Alternatively, if you absolutely need a linear history and want to use rebase on a shared branch, it's best to only do it when you are certain no one else has pulled from that branch yet. Or, communicate with your team and get explicit agreement before doing a force push."
+      },
+      {
+        "body": "The `--force-with-lease` flag is a slightly safer alternative to `--force`. It prevents overwriting the remote if someone else has pushed changes in the meantime, reducing the risk of data loss. Still, avoid rebase on shared branches."
+      },
+      {
+        "body": "If the `feature/A` branch isn't too old or critical, sometimes the easiest recovery is to simply revert the entire rebase on the remote (if possible) and then start over with a merge, or just create a new branch from `develop` and re-apply changes."
+      },
+      {
+        "body": "Always use `git pull` without `--rebase` for shared branches if you want to update from the remote. Or, if you use `--rebase`, be prepared to deal with the consequences and ensure you're the only one working on that specific set of commits."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Squashing Commits: Best practices for cleaning up a feature branch before merging",
+    "body": "I often find myself with a feature branch containing many small, 'work-in-progress' commits (e.g., 'fix typo', 'test change', 'revert temp'). Before merging this into `main` or a `develop` branch, I want to clean up the history so it looks nice and tidy with logical commits. What's the recommended way to squash these commits into fewer, more meaningful ones? Are there any pitfalls to watch out for?",
+    "replies": [
+      {
+        "body": "The best tool for this is `git rebase -i` (interactive rebase). You can specify how many commits back you want to squash. For example, `git rebase -i HEAD~5` will open an editor showing the last 5 commits, where you can change `pick` to `squash` or `fixup`."
+      },
+      {
+        "body": "When using `rebase -i`, `squash` allows you to combine the commit message of the squashed commit with the previous one, giving you a chance to edit the final message. `fixup` discards the squashed commit's message, keeping only the previous one. `fixup` is great for quick cleanups where the message doesn't add value."
+      },
+      {
+        "body": "Remember that `git rebase -i` rewrites history. This is fine for your *local, unpushed* feature branch. Once you push it to a remote, you generally shouldn't rebase it if others are working on it, for the reasons mentioned in other threads."
+      },
+      {
+        "body": "Another technique, though less common for squashing, is `git reset --soft <commit-hash>`. You reset to an earlier commit, effectively staging all changes from that point. Then you can create a single new commit with a clean message. This is simpler for squashing *all* commits since a certain point."
+      },
+      {
+        "body": "A good practice is to make frequent, small commits while developing, knowing you'll clean them up later. This helps with local debugging. Then, before pushing or opening a pull request, do your interactive rebase to create a clear, logical history for review."
+      },
+      {
+        "body": "When squashing, ensure each resulting commit still represents a single logical change. Don't squash unrelated changes together into one giant commit, as this makes future debugging and reverting much harder."
+      },
+      {
+        "body": "If you've already pushed your branch and now want to squash, you'll need to `git push --force-with-lease` after the rebase. This is generally acceptable for personal feature branches that are part of a pull request process, where the reviewer will pull the 'final' rebased branch."
+      },
+      {
+        "body": "Consider tools that integrate with your Git workflow, like GitHub's squash-and-merge or rebase-and-merge options. These can perform the squashing automatically when merging a pull request, simplifying the developer's local workflow."
+      }
+    ]
+  },
+  {
+    "category": "Help",
+    "title": "Team Git Workflow: Merge vs Rebase for integrating feature branches into develop/main?",
+    "body": "Our team is growing, and our Git workflow feels a bit chaotic. We currently use `git merge` for everything, but our `develop` branch history is very noisy with merge commits. Some developers advocate for `git rebase` to keep a clean, linear history. What are the best practices for a team workflow? Should we enforce merge, rebase, or a hybrid strategy for integrating feature branches into our `develop` or `main` branches? What are the pros and cons in a team setting?",
+    "replies": [
+      {
+        "body": "This is a perennial debate! Both merge and rebase-based workflows have their merits. The key is consistency and team agreement. For `main` (or `develop`), the history tells the story of your project. Merge preserves that story explicitly with merge commits."
+      },
+      {
+        "body": "A pure `merge` workflow (like Git Flow) ensures that every change, including merge points, is part of the immutable history. This is great for auditing and understanding exact timelines. The downside is a potentially 'messy' graph with many merge bubbles."
+      },
+      {
+        "body": "A `rebase` workflow (like GitHub Flow, if used carefully) aims for a perfectly linear history, as if all work was done sequentially. This makes `git log` output cleaner and potentially easier to follow. However, it requires strict discipline: never rebase public history, and often requires force pushes for PRs."
+      },
+      {
+        "body": "Many teams use a hybrid approach: developers rebase their local feature branches onto `develop` *before* opening a pull request to keep their own work clean. Then, when the PR is merged, the target branch (e.g., `develop`) uses `git merge --no-ff` (no fast-forward) to create a merge commit, preserving the branch's existence."
+      },
+      {
+        "body": "If you go with a rebase-based workflow for PRs, GitHub and GitLab offer 'Squash and Merge' or 'Rebase and Merge' options. These automatically squash all feature branch commits into one and then either merge or rebase it onto the target branch. This gives you a clean, linear history of feature-level changes."
+      },
+      {
+        "body": "The biggest con of a rebase workflow for a team is the risk of developers accidentally rebasing shared branches and then force pushing, which causes significant headaches for collaborators. This needs strong education and potentially protected branches."
+      },
+      {
+        "body": "Pros of merge: simpler to teach, history is accurate and immutable, easier to track when features were integrated. Cons: potentially noisy graph, can make `git blame` harder to read."
+      },
+      {
+        "body": "Pros of rebase: clean, linear history, easier to revert a feature (often a single commit). Cons: rewrites history, complex if not handled carefully in a team, can be confusing for beginners, requires `force push` which is inherently risky."
+      },
+      {
+        "body": "Ultimately, discuss with your team, agree on a clear strategy, document it, and enforce it through code review and potentially protected branch rules in your Git hosting platform. The 'best' workflow is the one your team understands and consistently follows."
+      }
+    ]
+  }
+]

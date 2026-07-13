@@ -10,9 +10,8 @@ from app.models.duplicate_detection import (
     DuplicateDetectionResponse,
 )
 
-from app.models.community_assistant import (
-    CommunityAssistantRequest,
-    CommunityAssistantResponse,
+from app.models.thread_summary import (
+    ThreadSummaryResponse,
 )
 
 from services.search_service import semantic_search
@@ -20,7 +19,9 @@ from services.similar_threads_service import get_similar_threads
 from services.duplicate_detection_service import (
     detect_duplicate_question,
 )
-from services.rag_service import ask_community_assistant
+from services.thread_summary_service import (
+    generate_thread_summary,
+)
 
 router = APIRouter()
 
@@ -69,17 +70,15 @@ def duplicate_check(
     )
 
 
-@router.post(
-    "/community-assistant",
-    response_model=CommunityAssistantResponse,
+@router.get(
+    "/threads/{thread_id}/summary",
+    response_model=ThreadSummaryResponse,
 )
-def community_assistant(
-    request: CommunityAssistantRequest,
+def thread_summary(
+    thread_id: int,
 ):
-    answer = ask_community_assistant(
-        question=request.question,
+    summary = generate_thread_summary(
+        thread_id=thread_id,
     )
 
-    return {
-        "answer": answer,
-    }
+    return summary

@@ -4,8 +4,17 @@ from app.models.semantic_search import (
     SemanticSearchRequest,
     SemanticSearchResponse,
 )
+
+from app.models.duplicate_detection import (
+    DuplicateDetectionRequest,
+    DuplicateDetectionResponse,
+)
+
 from services.search_service import semantic_search
 from services.similar_threads_service import get_similar_threads
+from services.duplicate_detection_service import (
+    detect_duplicate_question,
+)
 
 router = APIRouter()
 
@@ -40,3 +49,15 @@ def similar_threads(
     return {
         "results": results,
     }
+
+
+@router.post(
+    "/duplicate-check",
+    response_model=DuplicateDetectionResponse,
+)
+def duplicate_check(
+    request: DuplicateDetectionRequest,
+):
+    return detect_duplicate_question(
+        question=request.question,
+    )

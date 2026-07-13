@@ -63,7 +63,7 @@ def get_thread_embedding(
             if row is None:
                 return None
 
-            return row[0]
+            return row[0].to_list()
 
     finally:
         connection.close()

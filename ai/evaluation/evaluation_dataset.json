@@ -1,0 +1,22 @@
+[
+    {
+        "query": "How do I deploy Next.js on AWS?",
+        "relevant_thread_ids": [62]
+    },
+    {
+        "query": "How can I optimize Docker multi-stage builds?",
+        "relevant_thread_ids": [97]
+    },
+    {
+        "query": "Which EC2 instance should I use?",
+        "relevant_thread_ids": [61, 136]
+    },
+    {
+        "query": "How do I configure HTTPS for an S3 website?",
+        "relevant_thread_ids": [65, 137]
+    },
+    {
+        "query": "How do I reduce cold starts in Next.js?",
+        "relevant_thread_ids": [2]
+    }
+]

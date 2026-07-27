@@ -11,6 +11,8 @@ import { ArrowLeft, MessageCircle, ThumbsUp, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { getThreadSummary } from "@/lib/ai";
+import { Sparkles } from "lucide-react";
 
 function ThreadsDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -32,6 +34,9 @@ function ThreadsDetailsPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [isTogglingLike, setIsTogglingLike] = useState(false);
+
+  const [summary, setSummary] = useState("");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const apiClient = useMemo(() => createBrowserApiClient(getToken), [getToken]);
 
@@ -183,7 +188,32 @@ function ThreadsDetailsPage() {
     } finally {
       setIsTogglingLike(false);
     }
+  } 
+
+async function handleGenerateSummary() {
+  if (!thread) return;
+
+  try {
+    setIsGeneratingSummary(true);
+
+    const result = await getThreadSummary(
+      apiClient,
+      thread.id
+    );
+
+    console.log(result);
+
+    setSummary(result.summary);
+  } catch (error) {
+    console.error(error);
+
+    toast.error("Failed to generate summary", {
+      description: "Please try again.",
+    });
+  } finally {
+    setIsGeneratingSummary(false);
   }
+}
 
   if (loading) {
     return (
@@ -274,6 +304,33 @@ function ThreadsDetailsPage() {
               {thread.body}
             </p>
           </div>
+          <div className="flex justify-end">
+             <Button
+               variant="outline"
+               onClick={handleGenerateSummary}
+               disabled={isGeneratingSummary}
+              >
+               {isGeneratingSummary
+                  ? "Generating..."
+                  : "✨ Generate AI Summary"}
+              </Button>
+          </div>
+          {summary && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  AI Summary
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent>
+                <p className="whitespace-pre-wrap leading-7 text-muted-foreground">
+                   {summary}
+                </p>
+              </CardContent>
+           </Card>
+       )}
         </CardContent>
       </Card>
 

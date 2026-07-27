@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,10 +10,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { duplicateCheck } from "@/lib/ai";
 import { apiGet, createBrowserApiClient } from "@/lib/api-client";
 import { Category, ThreadDetail } from "@/types/thread";
 import { useAuth } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -27,15 +30,33 @@ const NewThreadSchema = z.object({
 
 type NewThreadFormValues = z.infer<typeof NewThreadSchema>;
 
+type DuplicateThread = {
+  id: number;
+  title: string;
+  body: string;
+  distance: number;
+};
+
+type DuplicateCheckResult = {
+  isDuplicate: boolean;
+  similarThread: DuplicateThread | null;
+};
+
 function NewThreadsPage() {
   const { getToken } = useAuth();
   const router = useRouter();
 
   const apiClient = useMemo(() => createBrowserApiClient(getToken), [getToken]);
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [categories, setCategories] = useState<Category[]>([]);
+const [isLoading, setIsLoading] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
+
+const [duplicateResult, setDuplicateResult] =
+  useState<DuplicateCheckResult | null>(null);
+
+const [checkingDuplicate, setCheckingDuplicate] =
+  useState(false);
 
   const form = useForm<NewThreadFormValues>({
     resolver: zodResolver(NewThreadSchema),
@@ -45,6 +66,8 @@ function NewThreadsPage() {
       categorySlug: "",
     },
   });
+
+  const title = form.watch("title");
 
   useEffect(() => {
     let isMounted = true;
@@ -75,6 +98,38 @@ function NewThreadsPage() {
     load();
   }, [apiClient, form]);
 
+  useEffect(() => {
+    if (isSubmitting) return;
+  if (!title || title.trim().length < 10) {
+    setDuplicateResult(null);
+    return;
+  }
+
+  const timeout = setTimeout(async () => {
+    try {
+      setCheckingDuplicate(true);
+
+      const result = await duplicateCheck(
+        apiClient,
+        title.trim()
+      );
+
+      console.log("Duplicate Check Result:", result);
+
+      setDuplicateResult(result);
+    } catch (err) {
+      console.error(err);
+      setDuplicateResult(null);
+      // toast.error("AI duplicate detection is temporarily unavailable.");
+
+    } finally {
+      setCheckingDuplicate(false);
+    }
+  }, 600);
+
+  return () => clearTimeout(timeout);
+}, [title, apiClient]);
+
   async function onThreadSubmit(values: NewThreadFormValues) {
     try {
       setIsSubmitting(true);
@@ -91,8 +146,9 @@ function NewThreadsPage() {
         description: "Your thread is now live!",
       });
 
-      router.push("/");
-      // router.push(`/threads/${created?.id}`);
+      setDuplicateResult(null);
+      // router.push("/");
+      router.push(`/threads/${created?.id}`);
     } catch (e) {
       console.log(e);
     } finally {
@@ -120,20 +176,70 @@ function NewThreadsPage() {
             className="space-y-6"
           >
             <div className="space-y-2">
-              <label
-                className="text-sm font-semibold text-foreground"
-                htmlFor="title"
+  <label
+    className="text-sm font-semibold text-foreground"
+    htmlFor="title"
+  >
+    Thread Title
+  </label>
+
+  <Input
+    id="title"
+    placeholder="Thread Title..."
+    {...form.register("title")}
+    disabled={isLoading || isSubmitting}
+    className="border-border mt-3 bg-background/70 text-sm"
+  />
+
+  {checkingDuplicate && (
+    <Card className="mt-4 border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20">
+      <CardContent className="py-4">
+        <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          <span>✨ AI is checking for similar discussions...</span>
+        </div>
+      </CardContent>
+    </Card>
+  )}
+
+  {!checkingDuplicate &&
+    duplicateResult?.isDuplicate &&
+    duplicateResult.similarThread && (
+      <Card className="mt-4 border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base text-amber-700 dark:text-amber-300">
+            ⚠ Similar Discussion Found
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-3">
+          <div>
+            <h3 className="font-semibold text-foreground">
+              {duplicateResult.similarThread.title}
+            </h3>
+
+            <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
+              {duplicateResult.similarThread.body}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              AI detected a very similar discussion.
+            </span>
+
+            <Button asChild size="sm" variant="outline">
+              <Link
+                href={`/threads/${duplicateResult.similarThread.id}`}
               >
-                Thread Title
-              </label>
-              <Input
-                id="title"
-                placeholder="Thread Title..."
-                {...form.register("title")}
-                disabled={isLoading || isSubmitting}
-                className="border-border mt-3 bg-background/70 text-sm"
-              />
-            </div>
+                View Discussion
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )}
+</div>
 
             <div className="space-y-2">
               <label

@@ -2,7 +2,7 @@ from services.embedding_service import embedding_service
 from repositories.search_repository import search_similar_threads
 
 
-DUPLICATE_THRESHOLD = 0.15
+DUPLICATE_THRESHOLD = 0.35
 
 
 def detect_duplicate_question(

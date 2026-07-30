@@ -1,5 +1,6 @@
 'use client'
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +12,15 @@ import { ArrowLeft, MessageCircle, ThumbsUp, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { getThreadSummary } from "@/lib/ai";
+import { getThreadSummary, getSimilarThreads } from "@/lib/ai";
 import { Sparkles } from "lucide-react";
+
+interface SimilarThread {
+  id: number;
+  title: string;
+  body: string;
+  distance: number;
+}
 
 function ThreadsDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -37,6 +45,10 @@ function ThreadsDetailsPage() {
 
   const [summary, setSummary] = useState("");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+
+  const [similarThreads, setSimilarThreads] = useState<SimilarThread[]>([]);
+  const [isLoadingSimilarThreads, setIsLoadingSimilarThreads] =
+   useState(false);
 
   const apiClient = useMemo(() => createBrowserApiClient(getToken), [getToken]);
 
@@ -84,6 +96,12 @@ function ThreadsDetailsPage() {
       isMounted = false;
     };
   }, [apiClient, id, userId]);
+
+  useEffect(() => {
+  if (thread) {
+    loadSimilarThreads();
+  }
+}, [thread]);
 
   async function handleAddComment() {
     const trimmedComment = newComment.trim();
@@ -215,6 +233,25 @@ async function handleGenerateSummary() {
   }
 }
 
+async function loadSimilarThreads() {
+  if (!thread) return;
+
+  try {
+    setIsLoadingSimilarThreads(true);
+
+    const response = await getSimilarThreads(
+      apiClient,
+      thread.id
+    );
+
+    setSimilarThreads(response.results);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setIsLoadingSimilarThreads(false);
+  }
+}
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-10">
@@ -331,6 +368,38 @@ async function handleGenerateSummary() {
               </CardContent>
            </Card>
        )}
+       {!isLoadingSimilarThreads && similarThreads.length > 0 && (
+  <Card className="border-border/70 bg-card">
+    <CardHeader>
+      <CardTitle>
+        🔥 Related Discussions
+      </CardTitle>
+
+      <p className="text-sm text-muted-foreground">
+        Explore similar conversations from the community.
+      </p>
+    </CardHeader>
+
+    <CardContent className="space-y-4">
+      {similarThreads.map((item) => (
+        <Link
+          key={item.id}
+          href={`/threads/${item.id}`}
+        >
+          <div className="rounded-lg border border-border p-4 transition hover:border-primary hover:bg-accent/40">
+            <h3 className="font-semibold">
+              {item.title}
+            </h3>
+
+            <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+              {item.body}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </CardContent>
+  </Card>
+)}   
         </CardContent>
       </Card>
 

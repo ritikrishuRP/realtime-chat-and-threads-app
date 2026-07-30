@@ -20,20 +20,20 @@ function addOnlineUser(rawUserId: unknown, socketId: string) {
   }
 }
 
-function removeOnlineUser(rawUserId: unknown, socketId: string) {
-  const userId = Number(rawUserId);
-  if (!Number.isFinite(userId) || userId <= 0) return;
+// function removeOnlineUser(rawUserId: unknown, socketId: string) {
+//   const userId = Number(rawUserId);
+//   if (!Number.isFinite(userId) || userId <= 0) return;
 
-  const existing = onlineUsers.get(userId);
+//   const existing = onlineUsers.get(userId);
 
-  if (!existing) return;
+//   if (!existing) return;
 
-  existing.delete(socketId);
+//   existing.delete(socketId);
 
-  if (existing.size === 0) {
-    onlineUsers.delete(userId);
-  }
-}
+//   if (existing.size === 0) {
+//     onlineUsers.delete(userId);
+//   }
+// }
 
 function getOnlineUserIds(): number[] {
   return Array.from(onlineUsers.keys());

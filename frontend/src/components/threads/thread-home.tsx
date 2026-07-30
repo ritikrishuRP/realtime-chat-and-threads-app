@@ -1,6 +1,7 @@
 "use client";
 
 import { apiGet, createBrowserApiClient } from "@/lib/api-client";
+import {semanticSearch} from "@/lib/ai";
 import { Category, ThreadSummary } from "@/types/thread";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
@@ -11,6 +12,13 @@ import { Button } from "../ui/button";
 import { Plus, Search } from "lucide-react";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
+
+interface SemanticSearchResult {
+  id: number;
+  title: string;
+  body: string;
+  distance: number;
+}
 
 function ThreadsHomePage() {
   const { getToken } = useAuth();
@@ -26,6 +34,12 @@ function ThreadsHomePage() {
   const [activeCategory, setActiveCategory] = useState(
     searchParams.get("category") ?? "all"
   );
+
+  const [semanticResults, setSemanticResults] = useState<
+     SemanticSearchResult[]
+  >([]);
+
+  const [isSemanticSearch, setIsSemanticSearch] = useState(false);
   //   homework -> error state
 
   useEffect(() => {
@@ -67,6 +81,9 @@ function ThreadsHomePage() {
     currentCategoryVal: string,
     currentSearchVal: string
   ) {
+    setIsSemanticSearch(false);
+    setSemanticResults([]);
+    
     const params = new URLSearchParams();
 
     if (currentCategoryVal && currentCategoryVal !== "all") {
@@ -103,7 +120,23 @@ function ThreadsHomePage() {
       setIsLoading(false);
     }
   }
+async function handleSemanticSearch() {
+  if (!search.trim()) return;
 
+  setIsLoading(true);
+
+  try {
+    const response = await semanticSearch(apiClient, search);
+
+    setSemanticResults(response.results);
+
+    setIsSemanticSearch(true);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setIsLoading(false);
+  }
+}
   return (
     <div className="flex w-full flex-col gap-6 lg:flex-row">
       <aside className="w-full shrink-0 lg:w-72">
@@ -178,9 +211,23 @@ function ThreadsHomePage() {
                     }}
                   />
                 </div>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                  Search
-                </Button>
+                <div className="flex gap-2">
+                   <Button
+                    disabled={isLoading}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={() => applyFilters(activeCategory, search)}
+                   >
+                      Search
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      disabled={!search.trim() || isLoading}
+                      onClick={handleSemanticSearch}
+                     >
+                      ✨ AI Search
+                   </Button>
+                 </div>
               </div>
             </div>
 
@@ -194,65 +241,124 @@ function ThreadsHomePage() {
         </Card>
 
         <div className="space-y-4">
-          {isLoading && (
-            <div className="flex items-center justify-center rounded-lg border border-border bg-card py-10">
-              <p className="text-sm text-muted-foreground">
-                Loading Threads...
-              </p>
+  {isSemanticSearch && (
+    <div className="flex items-center justify-between">
+      <h2 className="text-lg font-semibold">
+        ✨ AI Semantic Search Results
+      </h2>
+
+      <Button
+        variant="ghost"
+        onClick={() => {
+          setIsSemanticSearch(false);
+          setSemanticResults([]);
+        }}
+      >
+        Back to Threads
+      </Button>
+    </div>
+  )}
+
+  {isLoading && (
+    <div className="flex items-center justify-center rounded-lg border border-border bg-card py-10">
+      <p className="text-sm text-muted-foreground">
+        {isSemanticSearch
+           ? "Searching discussions with AI..."
+           : "Loading Threads..."}
+      </p>
+    </div>
+  )}
+
+  {!isLoading && !isSemanticSearch && threads.length === 0 && (
+    <Card className="border-dashed border-border bg-card">
+      <CardContent className="py-10 text-center">
+        <p className="text-sm text-muted-foreground">
+          {isSemanticSearch
+              ? "No semantically similar discussions found."
+              : "No threads found. Create your first thread"}
+        </p>
+      </CardContent>
+    </Card>
+  )}
+
+  {!isLoading &&
+    !isSemanticSearch &&
+    threads.map((thread) => (
+      <Card
+        key={thread.id}
+        className="group cursor-pointer border-border/70 bg-card transition-colors duration-150 hover:border-primary/90 hover:bg-card/90"
+      >
+        <Link href={`threads/${thread.id}`}>
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <Badge
+                    variant="outline"
+                    className="border-border/70 bg-secondary/70 text-[12px]"
+                  >
+                    {thread.category.name}
+                  </Badge>
+
+                  {thread.author?.handle && (
+                    <span className="text-muted-foreground/90">
+                      by @{thread.author.handle}
+                    </span>
+                  )}
+
+                  <span className="text-muted-foreground/85">
+                    {new Date(thread.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+
+                <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary">
+                  {thread.title}
+                </CardTitle>
+              </div>
             </div>
-          )}
+          </CardHeader>
 
-          {!isLoading && threads.length === 0 && (
-            <Card className="border-dashed border-border bg-card">
-              <CardContent className="py-10 text-center">
-                <p className="text-sm text-muted-foreground">
-                  No threads found. Create your first thread
-                </p>
-              </CardContent>
-            </Card>
-          )}
-          {!isLoading &&
-            threads.map((thread) => (
-              <Card
-                key={thread.id}
-                className="group cursor-pointer border-border/70 bg-card transition-colors duration-150 hover:border-primary/90 hover:bg-card/90"
-              >
-                <Link href={`threads/${thread.id}`}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <Badge
-                            variant="outline"
-                            className="border-border/70 bg-secondary/70 text-[12px]"
-                          >
-                            {thread.category.name}
-                          </Badge>
-                          {thread?.author?.handle && (
-                            <span className="text-muted-foreground/90">
-                              by @{thread?.author?.handle}
-                            </span>
-                          )}
-                          <span className="text-muted-foreground/85">
-                            {new Date(thread.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
+          <CardContent className="space-y-3 pb-4">
+            <p className="line-clamp-2 text-sm text-muted-foreground">
+              {thread.excerpt}
+            </p>
+          </CardContent>
+        </Link>
+      </Card>
+    ))}
 
-                        <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary">
-                          {thread.title}
-                        </CardTitle>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3 pb-4">
-                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {thread.excerpt}
-                    </p>
-                  </CardContent>
-                </Link>
-              </Card>
-            ))}
-        </div>
+  {!isLoading &&
+    isSemanticSearch &&
+    semanticResults.map((thread) => (
+      <Card
+        key={thread.id}
+        className="group cursor-pointer border-border/70 bg-card transition-colors duration-150 hover:border-primary/90 hover:bg-card/90"
+      >
+        <Link href={`threads/${thread.id}`}>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-4">
+              <CardTitle className="text-lg font-semibold">
+                {thread.title}
+              </CardTitle>
+
+              <Badge className="bg-primary/10 text-primary">
+                {Math.max(
+                      0,
+                      Math.round((1 - thread.distance) * 100)
+                )}% Match
+              </Badge>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <p className="line-clamp-3 text-sm text-muted-foreground">
+              {thread.body}
+            </p>
+          </CardContent>
+        </Link>
+      </Card>
+    ))}
+</div>
       </div>
     </div>
   );

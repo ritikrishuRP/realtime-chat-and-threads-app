@@ -100,7 +100,7 @@ function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-sidebar-border bg-sidebar/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
+      <div className="mx-auto flex h-16 w-full items-center justify-between px-6 md:px-8 lg:px-10">
         <div className="flex items-center gap-6">
           <Link
             href="/"
@@ -162,7 +162,7 @@ function Navbar() {
 
       {mobileMenuOpen && (
         <div className="border-t border-sidebar-border bg-sidebar/90 md:hidden">
-          <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-4 pb-4 pt-2">
+          <nav className="mx-auto flex w-full flex-col gap-1 px-6 pb-4 pt-2 md:px-8 lg:px-10">
             {navItems.map(renderNavLinks)}
           </nav>
         </div>

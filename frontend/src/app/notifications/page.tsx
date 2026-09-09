@@ -31,7 +31,10 @@ function NotificationsPage() {
   const { getToken } = useAuth();
   const router = useRouter();
 
-  const apiClient = useMemo(() => createBrowserApiClient(getToken), [getToken]);
+  const apiClient = useMemo(
+    () => createBrowserApiClient(getToken),
+    [getToken]
+  );
 
   const { decrementUnread } = useNotificationCount();
 
@@ -72,11 +75,15 @@ function NotificationsPage() {
     try {
       if (!n.readAt) {
         await apiClient.post(`/api/notifications/${n.id}/read`);
+
         setNotifications((prev) =>
           prev.map((noti) =>
-            noti.id === n.id ? { ...n, readAt: new Date().toISOString() } : n
+            noti.id === n.id
+              ? { ...noti, readAt: new Date().toISOString() }
+              : noti
           )
         );
+
         decrementUnread();
       }
     } catch (err) {
@@ -86,15 +93,48 @@ function NotificationsPage() {
     router.push(`/threads/${n.threadId}`);
   }
 
+  async function markAllAsRead() {
+    try {
+      await apiClient.post("/api/notifications/read-all");
+
+      const now = new Date().toISOString();
+
+      setNotifications((prev) =>
+        prev.map((notification) => ({
+          ...notification,
+          readAt: notification.readAt ?? now,
+        }))
+      );
+
+      const unread = notifications.filter((n) => !n.readAt).length;
+
+      if (unread > 0) {
+        decrementUnread(unread);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   const unreadCount = notifications.filter((n) => !n.readAt).length;
 
   return (
     <div className="mx-auto flex w-full flex-col gap-6 py-8 px-4">
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
           <Inbox className="h-7 w-7 text-primary" />
           Notifications
         </h1>
+
+        {unreadCount > 0 && (
+          <button
+            type="button"
+            onClick={markAllAsRead}
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-primary/10"
+          >
+            Mark all as read
+          </button>
+        )}
       </div>
 
       <Card className="border-border/70 bg-card">
@@ -105,6 +145,7 @@ function NotificationsPage() {
             </p>
           </CardContent>
         )}
+
         {!isLoading && notifications.length === 0 && (
           <CardContent className="py-10 text-center">
             <p className="text-sm text-muted-foreground">
@@ -117,6 +158,7 @@ function NotificationsPage() {
           <CardContent className="divide-y divide-border/70">
             {notifications.map((n) => {
               const text = formatText(n);
+
               const icon =
                 n.type === "REPLY_ON_THREAD" ? (
                   <MessageCircle className="h-4 w-4 text-chart-2" />
@@ -140,6 +182,7 @@ function NotificationsPage() {
                   <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-background/60">
                     {icon}
                   </div>
+
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
                       <p
@@ -151,6 +194,7 @@ function NotificationsPage() {
                       >
                         {text}
                       </p>
+
                       <span
                         className={`shrink-0 text-xs ${
                           isUnread
@@ -166,9 +210,11 @@ function NotificationsPage() {
                         })}
                       </span>
                     </div>
+
                     <p className="mt-1 truncate text-sm text-muted-foreground">
                       {n.thread.title}
                     </p>
+
                     {isUnread && (
                       <div className="mt-2 flex items-center gap-2">
                         <Badge

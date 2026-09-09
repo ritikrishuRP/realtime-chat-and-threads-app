@@ -196,6 +196,13 @@ export async function listNotificationsForUser(params: {
       values
     );
 
+    console.log(
+  result.rows.map((row) => ({
+    id: row.id,
+    type: row.type,
+  }))
+);
+
     return result.rows.map((noti) =>
       mapNotificationsRow(noti as NotificationRow)
     );
@@ -223,3 +230,15 @@ export async function markNotificationRead(params: {
 
 // HOMEWORK -> create a function to handle marking all notifications as read at once
 // 10 -> button ->
+export async function markAllNotificationsRead(params: { userId: number }) {
+  const { userId } = params;
+
+  await query(
+    `
+        UPDATE notifications
+        SET read_at = COALESCE(read_at, NOW())
+        WHERE user_id = $1 AND read_at IS NULL
+        `,
+    [userId]
+  );
+}

@@ -4,6 +4,7 @@ import { BadRequestError, UnauthorizedError } from "../lib/errors.js";
 import { getUserFromClerk } from "../modules/users/user.service.js";
 import {
   listNotificationsForUser,
+  markAllNotificationsRead,
   markNotificationRead,
 } from "../modules/notifications/notification.service.js";
 
@@ -66,3 +67,23 @@ notificationsRouter.post("/:id/read", async (req, res, next) => {
 });
 
 // HOMEWORK -> post /api/notifications/read-all
+
+notificationsRouter.post("/read-all", async (req, res, next) => {
+  try {
+    const auth = getAuth(req);
+
+    if( !auth.userId) {
+      throw new UnauthorizedError("Please sign in!!!!!");
+    }
+
+    const profile = await getUserFromClerk(auth.userId);
+
+    await markAllNotificationsRead({
+      userId: profile.user.id,
+    });
+
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});

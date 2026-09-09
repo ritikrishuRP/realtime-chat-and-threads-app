@@ -7,7 +7,7 @@ export const uploadRouter = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fieldSize: 10 * 1024 * 1024,
+    fileSize: 10 * 1024 * 1024,
   },
 });
 
@@ -17,36 +17,68 @@ uploadRouter.post(
   async (req: Request, res, next) => {
     try {
       if (!req.file) {
-        return res.status(400).json({ error: "No file provided" });
+        return res.status(400).json({
+          error: "No file provided",
+        });
       }
 
       const file = req.file;
 
       if (!file.mimetype.startsWith("image/")) {
-        return res.status(400).json({ error: "Only image files are allowed!" });
+        return res.status(400).json({
+          error: "Only image files are allowed!",
+        });
       }
+
+      console.log(
+        `[image-upload] file=${file.originalname} type=${file.mimetype} size=${file.size}`
+      );
 
       const result = await new Promise<{
         secure_url: string;
         width: number;
         height: number;
       }>((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder: "real_time_chat_threads_app",
-          },
-          (err, uploaded) => {
-            if (err || !uploaded) {
-              return reject(err ?? new Error("Image upload failed"));
-            }
+        const uploadStream =
+          cloudinary.uploader.upload_stream(
+            {
+              folder: "real_time_chat_threads_app",
+              resource_type: "image",
+            },
+            (err, uploaded) => {
+              if (err) {
+                console.error(
+                  "[Cloudinary upload error]",
+                  err
+                );
 
-            resolve({
-              secure_url: uploaded.secure_url,
-              width: uploaded.width,
-              height: uploaded.height,
-            });
-          }
-        );
+                return reject(err);
+              }
+
+              if (!uploaded) {
+                return reject(
+                  new Error(
+                    "Cloudinary returned no upload result"
+                  )
+                );
+              }
+
+              resolve({
+                secure_url: uploaded.secure_url,
+                width: uploaded.width,
+                height: uploaded.height,
+              });
+            }
+          );
+
+        uploadStream.on("error", (err) => {
+          console.error(
+            "[Cloudinary stream error]",
+            err
+          );
+
+          reject(err);
+        });
 
         uploadStream.end(file.buffer);
       });
@@ -57,6 +89,11 @@ uploadRouter.post(
         height: result.height,
       });
     } catch (err) {
+      console.error(
+        "[image-upload] failed:",
+        err
+      );
+
       next(err);
     }
   }

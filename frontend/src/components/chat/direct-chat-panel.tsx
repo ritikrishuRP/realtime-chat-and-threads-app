@@ -1,6 +1,9 @@
 "use client";
 
-import { apiGet, createBrowserApiClient } from "@/lib/api-client";
+import {
+  apiGet,
+  createBrowserApiClient,
+} from "@/lib/api-client";
 import {
   ChatUser,
   DirectMessage,
@@ -18,8 +21,17 @@ import {
   useState,
 } from "react";
 import { type Socket } from "socket.io-client";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Send, Wifi, WifiOff } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import {
+  Send,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
@@ -32,25 +44,60 @@ type DirectChatPanelProps = {
   connected: boolean;
 };
 
-function DirectChatPanel(props: DirectChatPanelProps) {
-  const { otherUser, otherUserId, socket, connected } = props;
+function DirectChatPanel(
+  props: DirectChatPanelProps
+) {
+  const {
+    otherUser,
+    otherUserId,
+    socket,
+    connected,
+  } = props;
+
   const { getToken } = useAuth();
 
-  const apiClient = useMemo(() => createBrowserApiClient(getToken), [getToken]);
+  const apiClient = useMemo(
+    () => createBrowserApiClient(getToken),
+    [getToken]
+  );
 
-  const [messages, setMessages] = useState<DirectMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
-  const [typingLabel, setTypingLabel] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [messages, setMessages] =
+    useState<DirectMessage[]>([]);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [input, setInput] =
+    useState("");
+
+  const [sending, setSending] =
+    useState(false);
+
+  const [typingLabel, setTypingLabel] =
+    useState<string | null>(null);
+
+  const [imageUrl, setImageUrl] =
+    useState<string | null>(null);
+
+  const messagesEndRef =
+    useRef<HTMLDivElement | null>(null);
+
+  const typingTimeoutRef =
+    useRef<NodeJS.Timeout | null>(null);
+
+  /*
+   * SCROLL
+   */
 
   useEffect(() => {
-    messagesEndRef?.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
   }, [messages]);
+
+  /*
+   * LOAD MESSAGES
+   */
 
   useEffect(() => {
     let isMounted = true;
@@ -59,27 +106,36 @@ function DirectChatPanel(props: DirectChatPanelProps) {
       setIsLoading(true);
 
       try {
-        const res = await apiGet<DirectMessage[]>(
-          apiClient,
-          `/api/chat/conversations/${otherUserId}/messages`,
-          {
-            params: {
-              limit: 100,
-            },
-          }
-        );
+        const res =
+          await apiGet<DirectMessage[]>(
+            apiClient,
+            `/api/chat/conversations/${otherUserId}/messages`,
+            {
+              params: {
+                limit: 100,
+              },
+            }
+          );
 
         if (!isMounted) return;
-        setMessages(mapDirectMessagesResponse(res));
+
+        setMessages(
+          mapDirectMessagesResponse(res)
+        );
       } catch (err) {
-        console.log(err);
+        console.error(
+          "Failed to load messages:",
+          err
+        );
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
     if (otherUserId) {
-      load();
+      void load();
     }
 
     return () => {
@@ -87,85 +143,145 @@ function DirectChatPanel(props: DirectChatPanelProps) {
     };
   }, [apiClient, otherUserId]);
 
+  /*
+   * SOCKET
+   */
+
   useEffect(() => {
     if (!socket) return;
 
-    function handleMessage(payload: RawDirectMessage) {
-      const mapped = mapDirectMessage(payload);
+    function handleMessage(
+      payload: RawDirectMessage
+    ) {
+      const mapped =
+        mapDirectMessage(payload);
 
       if (
-        mapped.senderUserId !== otherUserId &&
-        mapped.recipientUserId !== otherUserId
+        mapped.senderUserId !==
+          otherUserId &&
+        mapped.recipientUserId !==
+          otherUserId
       ) {
         return;
       }
 
-      setMessages((prev) => [...prev, mapped]);
+      setMessages((previous) => [
+        ...previous,
+        mapped,
+      ]);
     }
 
-    function handleTyping(payload: {
-      senderUserId?: number;
-      receipientUserId?: number;
-      isTyping?: boolean;
-    }) {
-      const senderId = Number(payload.senderUserId);
-
-      if (senderId !== otherUserId) return;
-
-      if (payload.isTyping) {
-        setTypingLabel("Typing...");
-      } else {
-        setTypingLabel(null);
+    function handleTyping(
+      payload: {
+        senderUserId?: number;
+        isTyping?: boolean;
       }
+    ) {
+      const senderId =
+        Number(payload.senderUserId);
+
+      if (
+        senderId !== otherUserId
+      ) {
+        return;
+      }
+
+      setTypingLabel(
+        payload.isTyping
+          ? "Typing..."
+          : null
+      );
     }
 
-    socket.on("dm:message", handleMessage);
-    socket.on("dm:typing", handleTyping);
+    socket.on(
+      "dm:message",
+      handleMessage
+    );
+
+    socket.on(
+      "dm:typing",
+      handleTyping
+    );
 
     return () => {
-      socket.off("dm:message", handleMessage);
-      socket.off("dm:typing", handleTyping);
+      socket.off(
+        "dm:message",
+        handleMessage
+      );
+
+      socket.off(
+        "dm:typing",
+        handleTyping
+      );
     };
   }, [socket, otherUserId]);
 
-  function setSendTyping(isTyping: boolean) {
-    if (!socket) {
-      return;
-    }
+  /*
+   * TYPING
+   */
 
-    socket.emit("dm:typing", { recipientUserId: otherUserId, isTyping });
+  function setSendTyping(
+    isTyping: boolean
+  ) {
+    if (!socket) return;
+
+    socket.emit(
+      "dm:typing",
+      {
+        recipientUserId: otherUserId,
+        isTyping,
+      }
+    );
   }
 
-  function handleInputChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    const value = event.target.value;
-
-    setInput(value);
+  function handleInputChange(
+    event: ChangeEvent<HTMLTextAreaElement>
+  ) {
+    setInput(event.target.value);
 
     if (!socket) return;
 
     if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
+      clearTimeout(
+        typingTimeoutRef.current
+      );
     }
 
     setSendTyping(true);
 
-    typingTimeoutRef.current = setTimeout(() => {
-      setSendTyping(false);
-      typingTimeoutRef.current = null;
-    }, 2000);
+    typingTimeoutRef.current =
+      setTimeout(() => {
+        setSendTyping(false);
+        typingTimeoutRef.current =
+          null;
+      }, 2000);
   }
 
-  function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  /*
+   * ENTER TO SEND
+   */
+
+  function handleKeyDown(
+    event: KeyboardEvent<HTMLTextAreaElement>
+  ) {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey
+    ) {
+      event.preventDefault();
       void handleSend();
     }
   }
 
+  /*
+   * SEND
+   */
+
   async function handleSend() {
     if (!socket || !connected) {
       toast("Not connected", {
-        description: "Realtime connection is not established yet!",
+        description:
+          "Realtime connection is not established yet!",
       });
 
       return;
@@ -173,7 +289,9 @@ function DirectChatPanel(props: DirectChatPanelProps) {
 
     const body = input.trim();
 
-    if (!body && !imageUrl) return;
+    if (!body && !imageUrl) {
+      return;
+    }
 
     setSending(true);
 
@@ -185,173 +303,221 @@ function DirectChatPanel(props: DirectChatPanelProps) {
       });
 
       setInput("");
-      setImageUrl("");
+      setImageUrl(null);
       setSendTyping(false);
     } finally {
       setSending(false);
     }
   }
 
+  /*
+   * TITLE
+   */
+
   const title =
-    otherUser?.handle && otherUser?.handle !== ""
-      ? `@${otherUser?.handle}`
-      : otherUser?.displayName ?? "Conversation";
+    otherUser?.handle &&
+    otherUser.handle !== ""
+      ? `@${otherUser.handle}`
+      : otherUser?.displayName ??
+        "Conversation";
+
+  /*
+   * UI
+   */
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden border-border/70 bg-card">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border pb-3">
-        <div>
-          <CardTitle className="text-base text-foreground">{title}</CardTitle>
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden border-border/70 bg-card">
+      {/* HEADER */}
+
+      <CardHeader className="flex shrink-0 flex-row items-center justify-between border-b border-border px-5 py-3">
+        <div className="min-w-0">
+          <CardTitle className="truncate text-base text-foreground">
+            {title}
+          </CardTitle>
+
           <p className="mt-0.5 text-xs text-muted-foreground">
             Direct message conversation
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span
-            className={`flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-medium ${
-              connected
-                ? "bg-primary/10 text-primary"
-                : "bg-accent text-accent-foreground"
-            }`}
-          >
-            {connected ? (
-              <>
-                <Wifi className="w-3 h-3" />
-                Online
-              </>
-            ) : (
-              <>
-                <WifiOff className="w-3 h-3" />
-                Offline
-              </>
-            )}
-          </span>
-        </div>
+
+        <span
+          className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium ${
+            connected
+              ? "bg-primary/10 text-primary"
+              : "bg-accent text-accent-foreground"
+          }`}
+        >
+          {connected ? (
+            <>
+              <Wifi className="h-3 w-3" />
+              Online
+            </>
+          ) : (
+            <>
+              <WifiOff className="h-3 w-3" />
+              Offline
+            </>
+          )}
+        </span>
       </CardHeader>
 
-      <CardContent className="flex-1 space-y-3 overflow-y-auto bg-background/60 p-4">
+      {/* MESSAGES */}
+
+      <CardContent className="min-h-0 flex-1 overflow-y-auto bg-background/60 px-5 py-4">
         {isLoading && (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-xs text-muted-foreground">Loading messages...</p>
-          </div>
-        )}
-        {!isLoading && messages.length === 0 && (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex h-full items-center justify-center">
             <p className="text-xs text-muted-foreground">
-              No messages yet. Start the first initiative
+              Loading messages...
             </p>
           </div>
         )}
 
         {!isLoading &&
-          messages.map((msg) => {
-            console.log(msg.senderUserId, otherUserId, "otherUserId");
+          messages.length === 0 && (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  No messages yet.
+                </p>
 
-            const isOther = msg.senderUserId === otherUserId;
-            const label = isOther ? title : "You";
+                <p className="mt-1 text-xs text-muted-foreground/70">
+                  Start the conversation.
+                </p>
+              </div>
+            </div>
+          )}
 
-            const time = new Date(msg.createdAt).toLocaleDateString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+        {!isLoading &&
+          messages.length > 0 && (
+            <div className="flex w-full flex-col gap-2.5">
+              {messages.map((msg) => {
+                const isOther =
+                  msg.senderUserId ===
+                  otherUserId;
 
-            return (
-              <div
-                className={`flex gap-2 text-xs ${
-                  isOther ? "justify-start" : "justify-end"
-                }`}
-                key={msg.id}
-              >
-                <div className={`max-w-xs ${isOther ? "" : "order-2"}`}>
+                return (
                   <div
-                    className={`mb-1 text-[12px] font-medium ${
+                    key={msg.id}
+                    className={`flex w-full ${
                       isOther
-                        ? "text-muted-foreground"
-                        : "text-muted-foreground text-right"
+                        ? "justify-start"
+                        : "justify-end"
                     }`}
                   >
-                    {label} - {time}
-                  </div>
-
-                  {msg?.body && (
                     <div
-                      className={`inline-block rounded-lg px-3 py-2 transition-colors duration-150
-                      ${
+                      className={`flex max-w-[72%] flex-col ${
                         isOther
-                          ? "bg-accent text-accent-foreground"
-                          : "bg-primary/80 text-primary-foreground"
-                      }
-                      `}
+                          ? "items-start ml-1"
+                          : "items-end mr-1"
+                      }`}
                     >
-                      <p className="wrap-break-word text-[16px] leading-relaxed">
-                        {msg.body}
-                      </p>
-                    </div>
-                  )}
+                      {/* MESSAGE */}
 
-                  {msg?.imageUrl && (
-                    <div className="mt-2 overflow-hidden rounded-lg border border-border">
-                      <img
-                        src={msg.imageUrl}
-                        alt="attachment"
-                        className="max-h-52 max-w-xs rounded-lg object-cover"
-                      />
+                      {msg.body && (
+                        <div
+                          className={`w-fit max-w-full wrap-break-word rounded-2xl px-4 py-2 text-sm leading-relaxed ${
+                            isOther
+                              ? "rounded-tl-md bg-accent text-accent-foreground"
+                              : "rounded-tr-md bg-primary/80 text-primary-foreground"
+                          }`}
+                        >
+                          {msg.body}
+                        </div>
+                      )}
+
+                      {/* IMAGE */}
+
+                      {msg.imageUrl && (
+                        <div className="mt-2 overflow-hidden rounded-xl border border-border">
+                          <img
+                            src={msg.imageUrl}
+                            alt="attachment"
+                            className="max-h-64 max-w-full object-contain"
+                          />
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                );
+              })}
+
+              {typingLabel && (
+                <div className="flex w-full justify-start">
+                  <div className="ml-1 rounded-full bg-accent px-3 py-1.5 text-[11px] italic text-muted-foreground">
+                    {typingLabel}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              )}
 
-        {typingLabel && (
-          <div className="flex justify-start gap-2 text-xs">
-            <div className="italic text-muted-foreground">{typingLabel}</div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+              <div
+                ref={messagesEndRef}
+              />
+            </div>
+          )}
       </CardContent>
 
-      <div className="space-y-3 border-t border-border bg-car  p-5">
+      {/* COMPOSER */}
+
+      <div className="shrink-0 border-t border-border bg-card px-5 py-3">
         {imageUrl && (
-          <div className="rounded-lg border border-border bg-background/70 p-2">
-            <p className="text-[12px] text-muted-foreground mb-2">
-              Image ready to send:
-            </p>
+          <div className="mb-2 flex items-center gap-3 rounded-xl border border-border bg-background/70 p-2">
             <img
               src={imageUrl}
-              alt="pending"
-              className="max-h-32 rounded-lg border border-border object-contain"
+              alt="Pending attachment"
+              className="h-12 w-12 rounded-lg object-cover"
             />
+
+            <div className="flex-1">
+              <p className="text-xs text-foreground">
+                Image ready to send
+              </p>
+
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                It will be sent with your next message.
+              </p>
+            </div>
           </div>
         )}
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            {/* image upload component  */}
-            <ImageUploadButton onImageUpload={(url) => setImageUrl(url)} />
-            <span className="text-[11px] text-muted-foreground">
-              Cloudinary Image Upload
-            </span>
+        <div className="flex items-end gap-2.5">
+          <div className="flex min-w-0 flex-1 items-end gap-2 rounded-xl border border-border bg-background/60 px-2.5 py-1.5 focus-within:ring-1 focus-within:ring-primary/40">
+            <ImageUploadButton
+              onImageUpload={(url) =>
+                setImageUrl(url)
+              }
+            />
+
+            <Textarea
+              rows={1}
+              value={input}
+              onChange={
+                handleInputChange
+              }
+              onKeyDown={
+                handleKeyDown
+              }
+              placeholder="Type a message..."
+              disabled={
+                !connected ||
+                sending
+              }
+              className="min-h-9 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-sm shadow-none focus-visible:ring-0"
+            />
           </div>
 
-          <div className="flex gap-2">
-            <Textarea
-              rows={2}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
-              disabled={!connected || sending}
-              className="min-h-14 resize-none border-border bg-background text-sm"
-            />
-            <Button
-              size="icon"
-              onClick={handleSend}
-              disabled={sending || !connected || (!input.trim() && !imageUrl)}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
+          <Button
+            size="icon"
+            onClick={handleSend}
+            disabled={
+              sending ||
+              !connected ||
+              (!input.trim() &&
+                !imageUrl)
+            }
+            className="h-10 w-10 shrink-0 rounded-xl"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </Card>

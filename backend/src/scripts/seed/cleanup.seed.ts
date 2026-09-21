@@ -14,5 +14,10 @@ export async function cleanupSeed() {
     CASCADE;
   `);
 
+  await query(`
+    DELETE FROM users
+    WHERE clerk_user_id LIKE 'seed_user_%';
+  `);
+
   console.log("✅ Cleanup completed.");
 }

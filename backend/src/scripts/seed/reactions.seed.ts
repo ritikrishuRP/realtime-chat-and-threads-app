@@ -7,6 +7,7 @@ export async function seedReactions() {
     await query<{ id: string }>(`
       SELECT id
       FROM users
+      ORDER BY id
     `)
   ).rows;
 
@@ -14,26 +15,36 @@ export async function seedReactions() {
     await query<{ id: string }>(`
       SELECT id
       FROM threads
+      ORDER BY id
     `)
   ).rows;
+
+  if (users.length === 0) {
+    throw new Error(
+      "Cannot seed reactions: no users exist."
+    );
+  }
 
   let totalReactions = 0;
 
   for (const thread of threads) {
-    // Random likes between 2 and 8
-    const likeCount = Math.floor(Math.random() * 7) + 2;
+    const likeCount = Math.min(
+      Math.floor(Math.random() * 7) + 2,
+      users.length
+    );
 
-    // Shuffle users
-    const shuffledUsers = [...users].sort(() => Math.random() - 0.5);
+    const shuffledUsers = [...users].sort(
+      () => Math.random() - 0.5
+    );
 
     for (const user of shuffledUsers.slice(0, likeCount)) {
-      await query(
+      const result = await query(
         `
         INSERT INTO thread_reactions (
           thread_id,
           user_id
         )
-        VALUES ($1,$2)
+        VALUES ($1, $2)
         ON CONFLICT DO NOTHING
         `,
         [
@@ -42,9 +53,13 @@ export async function seedReactions() {
         ]
       );
 
-      totalReactions++;
+      if (result.rowCount) {
+        totalReactions++;
+      }
     }
   }
 
-  console.log(`✅ Inserted ${totalReactions} reactions.`);
+  console.log(
+    `✅ Inserted ${totalReactions} reactions.`
+  );
 }

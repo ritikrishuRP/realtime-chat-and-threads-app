@@ -1,4 +1,6 @@
-CREATE TABLE thread_embeddings (
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE IF NOT EXISTS thread_embeddings (
     id BIGSERIAL PRIMARY KEY,
 
     thread_id BIGINT NOT NULL UNIQUE,

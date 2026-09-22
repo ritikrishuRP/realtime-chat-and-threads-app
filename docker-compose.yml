@@ -1,4 +1,5 @@
 services:
+
   postgres:
     image: pgvector/pgvector:pg16
     container_name: realtime_chat_and_threads_postgres
@@ -36,13 +37,19 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY}
+
     container_name: realtime_chat_and_threads_frontend
     restart: unless-stopped
+
     environment:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY}
       CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+
     depends_on:
       - backend
 
@@ -54,6 +61,8 @@ services:
     restart: unless-stopped
     environment:
       PYTHONUNBUFFERED: 1
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     depends_on:
       - backend
 

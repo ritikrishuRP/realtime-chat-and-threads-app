@@ -12,37 +12,43 @@ type DatasetThread = {
   }[];
 };
 
+async function loadDataset(): Promise<DatasetThread[]> {
+  const outputRoot = path.join(
+    process.cwd(),
+    "src",
+    "scripts",
+    "dataset-generator",
+    "output"
+  );
+
+  const folders = await readdir(outputRoot);
+
+  const dataset: DatasetThread[] = [];
+
+  for (const folder of folders) {
+    const folderPath = path.join(outputRoot, folder);
+
+    const files = await readdir(folderPath);
+
+    for (const fileName of files) {
+      if (!fileName.endsWith(".json")) continue;
+
+      const content = await readFile(
+        path.join(folderPath, fileName),
+        "utf8"
+      );
+
+      dataset.push(...JSON.parse(content));
+    }
+  }
+
+  return dataset;
+}
+
 export async function seedReplies() {
   console.log("🌱 Seeding replies...");
 
-const outputRoot = path.join(
-  process.cwd(),
-  "src",
-  "scripts",
-  "dataset-generator",
-  "output"
-);
-
-const folders = await readdir(outputRoot);
-
-const dataset: DatasetThread[] = [];
-
-for (const folder of folders) {
-  const folderPath = path.join(outputRoot, folder);
-
-  const files = await readdir(folderPath);
-
-  for (const fileName of files) {
-    if (!fileName.endsWith(".json")) continue;
-
-    const content = await readFile(
-      path.join(folderPath, fileName),
-      "utf8"
-    );
-
-    dataset.push(...JSON.parse(content));
-  }
-}
+  const dataset = await loadDataset();
 
   const users = (
     await query<{ id: string }>(`
@@ -52,14 +58,31 @@ for (const folder of folders) {
     `)
   ).rows;
 
+  if (users.length === 0) {
+    throw new Error(
+      "Cannot seed replies: no users exist."
+    );
+  }
+
   const threads = (
-    await query<{ id: string }>(`
+    await query<{ id: string }>(
+      `
       SELECT id
       FROM threads
-      ORDER BY id DESC
+      ORDER BY id ASC
       LIMIT $1
-    `, [dataset.length])
-  ).rows.reverse();
+      `,
+      [dataset.length]
+    )
+  ).rows;
+
+  if (threads.length !== dataset.length) {
+    throw new Error(
+      `Thread count mismatch. Dataset has ${dataset.length} threads, database has ${threads.length}.`
+    );
+  }
+
+  let totalReplies = 0;
 
   for (let i = 0; i < dataset.length; i++) {
     const thread = dataset[i];
@@ -76,7 +99,7 @@ for (const folder of folders) {
           author_user_id,
           body
         )
-        VALUES ($1,$2,$3)
+        VALUES ($1, $2, $3)
         `,
         [
           threadId,
@@ -84,8 +107,12 @@ for (const folder of folders) {
           reply.body,
         ]
       );
+
+      totalReplies++;
     }
   }
 
-  console.log("✅ Replies inserted.");
+  console.log(
+    `✅ Inserted ${totalReplies} replies.`
+  );
 }

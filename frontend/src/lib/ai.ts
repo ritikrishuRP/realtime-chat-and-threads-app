@@ -8,7 +8,10 @@ export async function duplicateCheck(
     question,
   });
 
-  return response.data.data;
+  return {
+    isDuplicate: response.data.is_duplicate,
+    similarThread: response.data.similar_thread,
+  };
 }
 
 export async function semanticSearch(
@@ -19,7 +22,7 @@ export async function semanticSearch(
     query,
   });
 
-  return response.data.data;
+  return response.data;
 }
 
 export async function getThreadSummary(
@@ -30,7 +33,7 @@ export async function getThreadSummary(
     `/api/ai/threads/${threadId}/summary`
   );
 
-  return response.data.data;
+  return response.data;
 }
 
 export async function getSimilarThreads(
@@ -41,6 +44,6 @@ export async function getSimilarThreads(
     `/api/ai/threads/${threadId}/similar`
   );
 
-  return response.data.data;
+  return response.data;
 }
 

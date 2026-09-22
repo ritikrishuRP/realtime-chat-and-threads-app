@@ -12,6 +12,12 @@ export async function seedChats() {
     `)
   ).rows;
 
+  if (users.length < 2) {
+    throw new Error(
+      "Cannot seed chats: at least 2 users are required."
+    );
+  }
+
   let totalMessages = 0;
 
   for (let i = 0; i < 300; i++) {
@@ -33,7 +39,7 @@ export async function seedChats() {
         recipient_user_id,
         body
       )
-      VALUES ($1,$2,$3)
+      VALUES ($1, $2, $3)
       `,
       [
         sender.id,
@@ -48,13 +54,15 @@ export async function seedChats() {
           "Can you help me with PostgreSQL indexing?",
           "That UI looks awesome!",
           "Let's meet on Discord later.",
-          "Did you try the latest Next.js version?"
-        ])
+          "Did you try the latest Next.js version?",
+        ]),
       ]
     );
 
     totalMessages++;
   }
 
-  console.log(`✅ Inserted ${totalMessages} direct messages.`);
+  console.log(
+    `✅ Inserted ${totalMessages} direct messages.`
+  );
 }

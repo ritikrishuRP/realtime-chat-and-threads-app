@@ -34,6 +34,7 @@ import {
 } from "react";
 
 function Chat() {
+  console.log("🔥🔥 CHAT PAGE LOADED 🔥🔥");
   const { getToken } = useAuth();
   const { connected, socket } = useSocket();
 
@@ -74,7 +75,12 @@ function Chat() {
             "/api/chat/users"
           );
 
+          console.log("USERS FROM API:", users);
+
+          
+
         if (!isMounted) return;
+
 
         setUsers(
           response.map(mapChatUser)
@@ -294,14 +300,14 @@ function Chat() {
       }
 
       const aName =
+        a.displayName?.trim() ||
         a.handle ||
-        a.displayName ||
         "User";
 
       const bName =
-        b.handle ||
-        b.displayName ||
-        "User";
+         b.displayName?.trim() ||
+         b.handle ||
+      "User";
 
       return aName.localeCompare(
         bName
@@ -334,14 +340,14 @@ function Chat() {
    * HELPERS
    */
 
-  function getUserLabel(
-    user: ChatUser
-  ) {
-    return user.handle &&
-      user.handle.length > 0
+  function getUserLabel(user: ChatUser) {
+  return (
+    user.displayName?.trim() ||
+    (user.handle?.trim()
       ? `@${user.handle}`
-      : user.displayName ?? "User";
-  }
+      : "User")
+  );
+}
 
   function getMessagePreview(
     user: ChatUser

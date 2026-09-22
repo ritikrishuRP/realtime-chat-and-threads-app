@@ -314,13 +314,11 @@ function DirectChatPanel(
    * TITLE
    */
 
-  const title =
-    otherUser?.handle &&
-    otherUser.handle !== ""
-      ? `@${otherUser.handle}`
-      : otherUser?.displayName ??
-        "Conversation";
-
+const title =
+  otherUser?.displayName?.trim() ||
+  (otherUser?.handle?.trim()
+    ? `@${otherUser.handle}`
+    : "Conversation");
   /*
    * UI
    */

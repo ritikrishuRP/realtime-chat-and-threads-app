@@ -22,7 +22,7 @@ export async function semanticSearch(
     query,
   });
 
-  return response.data;
+  return response.data.data;
 }
 
 export async function getThreadSummary(

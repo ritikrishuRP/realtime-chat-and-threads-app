@@ -89,8 +89,8 @@ jobs:
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
               docker login --username AWS --password-stdin \
               ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-            docker compose pull
-            docker compose up -d --force-recreate
+            docker compose pull backend frontend ai
+            docker compose up -d --force-recreate backend frontend ai nginx
             docker image prune -f
 
   deploy-dev:
@@ -111,6 +111,6 @@ jobs:
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
               docker login --username AWS --password-stdin \
               ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-            docker compose pull
-            docker compose up -d --force-recreate
+            docker compose pull backend frontend ai
+            docker compose up -d --force-recreate backend frontend ai nginx
             docker image prune -f

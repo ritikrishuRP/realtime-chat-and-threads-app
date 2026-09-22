@@ -11,19 +11,11 @@ export default function SignInPage() {
           </h1>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card p-6 backdrop-blur-sm">
-          <SignIn
-            routing="path"
-            path="/sign-in"
-            signUpUrl="/sign-up"
-            fallbackRedirectUrl="/"
-          />
+          <SignIn />
         </div>
         <p className="text-center text-xs text-muted-foreground">
-          New here?
-          <Link
-            className="font-medium text-primary hover:text-primary/90"
-            href={"/sign-up"}
-          >
+          New here?{" "}
+          <Link className="font-medium text-primary hover:text-primary/90" href="/sign-up">
             Sign Up
           </Link>
         </p>

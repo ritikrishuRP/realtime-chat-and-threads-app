@@ -33,7 +33,7 @@ export async function getThreadSummary(
     `/api/ai/threads/${threadId}/summary`
   );
 
-  return response.data;
+  return response.data.data;   // ← unwrap the outer { data: ... }
 }
 
 export async function getSimilarThreads(
@@ -44,6 +44,5 @@ export async function getSimilarThreads(
     `/api/ai/threads/${threadId}/similar`
   );
 
-  return response.data;
+  return response.data.data;   // ← unwrap the outer { data: ... }
 }
-
